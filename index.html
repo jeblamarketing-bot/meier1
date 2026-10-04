@@ -1380,7 +1380,7 @@ main{position:relative;z-index:2}
         layers.push({c, p, a: st.a, r});
         // la notificación sigue un momento sobre la escena siguiente y luego se va
         const P = SEC[st.k - 1];
-        if (P && P.tx === 'notify' && c.top - (P.top + P.h) < 2 && p < 0.34) { notifC = P; nOp = 1 - sm((p - 0.22) / 0.1); nThumb = 1; nSlide = sm((p - 0.2) / 0.12); }
+        if (P && P.tx === 'notify' && c.top - (P.top + P.h) < 2 && p < 0.24) { notifC = P; nOp = 1 - sm((p - 0.12) / 0.08); nThumb = 1; nSlide = sm((p - 0.1) / 0.1); }
       }
       ctx.globalAlpha = 1;
       setNotif(notifC, nOp, nThumb, nSlide);
