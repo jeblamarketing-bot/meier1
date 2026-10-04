@@ -1,0 +1,1281 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MEIER1 · Tu IA. Con botones de verdad.</title>
+<meta name="description" content="MEIER1 es un instrumento de bolsillo que conecta sus botones con tu IA: reportes, minutas, alertas y más, con un toque. Reserva el tuyo.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jeblamarketing-bot.github.io/meier1/">
+<meta property="og:title" content="MEIER1 · Tu IA. Con botones de verdad.">
+<meta property="og:description" content="Un instrumento de bolsillo que conecta sus botones con tu IA. Reserva el tuyo.">
+<meta property="og:image" content="https://jeblamarketing-bot.github.io/meier1/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Página de producto al estilo Apple. Un plato fijo (canvas) cuenta la historia; el texto se queda quieto
+   en los momentos clave y las escenas se conectan entre sí (zoom a la pantalla, notificación, feed). */
+:root{
+  --paper:#ffffff;
+  --panel:#f5f5f7;
+  --ink:#1d1d1f;
+  --mute:#6e6e73;
+  --faint:#86868b;
+  --line:#d2d2d7;
+  --accent:#c4520f;
+  --orange:#f07a2a;
+  --hot:#ffb27a;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --gutter:clamp(20px,5.2vw,88px);
+  color-scheme:light;
+}
+html{background:var(--paper)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.47;letter-spacing:-.022em;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+*{box-sizing:border-box}
+a{color:inherit}
+
+/* ---------- plato fijo ---------- */
+.film{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:#000}
+#film{position:absolute;inset:0;width:100%;height:100%}
+.scrim{position:absolute;inset:0;opacity:0;--c:0,0,0;--a:.5}
+.scrim.ink{--c:255,255,255;--a:.78}
+.scrim.l{background:linear-gradient(90deg,rgba(var(--c),var(--a)) 0%,rgba(var(--c),calc(var(--a)*.55)) 26%,rgba(var(--c),0) 58%)}
+.scrim.r{background:linear-gradient(270deg,rgba(var(--c),var(--a)) 0%,rgba(var(--c),calc(var(--a)*.55)) 26%,rgba(var(--c),0) 58%)}
+.scrim.bl{background:linear-gradient(0deg,rgba(var(--c),var(--a)) 0%,rgba(var(--c),calc(var(--a)*.5)) 26%,rgba(var(--c),0) 56%);-webkit-mask-image:linear-gradient(90deg,#000 0%,#000 38%,transparent 78%);mask-image:linear-gradient(90deg,#000 0%,#000 38%,transparent 78%)}
+.scrim.tl{background:linear-gradient(180deg,rgba(var(--c),var(--a)) 0%,rgba(var(--c),calc(var(--a)*.5)) 30%,rgba(var(--c),0) 58%);-webkit-mask-image:linear-gradient(90deg,#000 0%,#000 36%,transparent 74%);mask-image:linear-gradient(90deg,#000 0%,#000 36%,transparent 74%)}
+.herocap{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + clamp(18px,4vh,40px));display:flex;flex-direction:column;align-items:center;gap:.45rem;text-align:center;color:#f5f5f7}
+.herocap p{margin:0}
+.herocap .by{font-size:clamp(17px,1.4vw,21px);font-weight:600;letter-spacing:-.01em}
+.herocap .tl{font-size:clamp(15px,1.1vw,17px);color:#c7c7cc;font-weight:500}
+.hint{margin-top:.35rem;width:1px;height:32px;background:linear-gradient(#f5f5f7,transparent);animation:drip 2.2s ease-in-out infinite}
+@keyframes drip{0%{transform:scaleY(.25);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}100%{transform:scaleY(.25);transform-origin:bottom}}
+
+/* señal inalámbrica */
+.pulse{position:absolute;left:0;top:0;width:0;height:0;opacity:0}
+.pulse i{position:absolute;left:-14px;top:-14px;width:28px;height:28px;border-radius:50%;border:2px solid var(--orange);animation:ring 1.8s cubic-bezier(.2,.6,.3,1) infinite}
+.pulse i:nth-child(2){animation-delay:.6s}.pulse i:nth-child(3){animation-delay:1.2s}
+.pulse b{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--orange);box-shadow:0 0 0 4px rgba(240,122,42,.25)}
+.pulse span{position:absolute;left:24px;top:-48px;white-space:nowrap;font:600 13px/1 var(--sans);letter-spacing:.02em;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.7)}
+.pulse.ink span{color:var(--ink);text-shadow:0 1px 8px rgba(255,255,255,.95)}
+@keyframes ring{0%{transform:scale(.4);opacity:.95}100%{transform:scale(4.2);opacity:0}}
+
+/* etiquetas de botones y sensores */
+.pins{position:absolute;inset:0}
+.pin{position:absolute;left:0;top:0;width:0;height:0;opacity:0;visibility:hidden}
+.pin s{position:absolute;left:0;top:0;height:1px;background:rgba(29,29,31,.42);transform-origin:0 0}
+.pin i{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px var(--orange),0 1px 8px rgba(0,0,0,.22)}
+.pin span{position:absolute;left:0;top:0;white-space:nowrap;display:flex;flex-direction:column;gap:1px;padding:.42rem .7rem .46rem;border-radius:12px;background:rgba(255,255,255,.94);box-shadow:0 2px 14px rgba(0,0,0,.1),0 0 0 .5px rgba(0,0,0,.06)}
+.pin b{font:600 14px/1.15 var(--sans);letter-spacing:-.012em;color:var(--ink)}
+.pin small{font:500 12px/1.2 var(--sans);letter-spacing:-.005em;color:var(--mute)}
+.pin.left span{align-items:flex-end;text-align:right}
+.pin.mid span{align-items:center;text-align:center}
+.tags{position:absolute;inset:0}
+.tag{position:absolute;left:0;top:0;width:0;height:0;opacity:0}
+.tag i{position:absolute;left:-.8rem;top:-.8rem;width:1.6rem;height:1.6rem;display:grid;place-items:center;border-radius:50%;font:600 12px/1 var(--sans);font-style:normal;letter-spacing:0;color:var(--ink);background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.18),0 0 0 1px rgba(0,0,0,.08)}
+.tag b{position:absolute;left:1.15rem;top:-.85rem;display:none;white-space:nowrap;font:600 13px/1 var(--sans);color:var(--ink);background:#fff;padding:.48rem .7rem;border-radius:999px;box-shadow:0 2px 12px rgba(0,0,0,.14)}
+.tag.hot i{background:var(--orange);color:#fff;box-shadow:0 0 0 4px rgba(240,122,42,.22)}
+.tag.hot b{display:block}
+
+/* notificación y hora entre escenas */
+#notif{position:fixed;z-index:4;left:50%;top:calc(env(safe-area-inset-top,0px) + 68px);width:min(25.5rem,calc(100vw - 32px));display:grid;grid-template-columns:40px 1fr 58px;gap:12px;align-items:center;padding:12px 12px 12px 14px;border-radius:24px;
+  background:rgba(246,246,248,.86);-webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px);box-shadow:0 18px 50px rgba(0,0,0,.22),0 0 0 .5px rgba(0,0,0,.1);opacity:0;visibility:hidden;pointer-events:none;color:var(--ink);transform:translate3d(-50%,0,0)}
+#notif .app{width:40px;height:40px;border-radius:11px;background:linear-gradient(160deg,#ff9a4a,#e5481b);display:flex;align-items:center;justify-content:center;gap:5px}
+#notif .app i{width:7px;height:11px;border-radius:4px;background:#fff}
+#notif .meta{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;line-height:1.2;color:#6e6e73;font-weight:500}
+#notif strong{display:block;margin-top:1px;font-size:15px;font-weight:600;line-height:1.25;letter-spacing:-.015em}
+#notif p{margin:0;font-size:14px;line-height:1.3;color:#3a3a3c}
+#notif img{width:58px;height:58px;border-radius:12px;object-fit:cover;opacity:0}
+#timecard{position:fixed;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;opacity:0;visibility:hidden;pointer-events:none;white-space:nowrap}
+#timecard b{display:block;font-size:clamp(84px,12vw,190px);font-weight:600;letter-spacing:-.055em;line-height:.95;font-variant-numeric:tabular-nums}
+#timecard span{display:block;margin-top:.9rem;font-size:clamp(18px,1.5vw,24px);font-weight:600;letter-spacing:-.015em;color:var(--accent)}
+#timecard.white{color:#fff}
+#timecard.white span{color:var(--hot)}
+
+/* ---------- navegación ---------- */
+.bar{position:fixed;top:0;left:0;right:0;z-index:6;display:flex;align-items:center;gap:1.5rem;padding:calc(env(safe-area-inset-top,0px) + 11px) var(--gutter) 11px;
+  background:rgba(255,255,255,.76);-webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px);border-bottom:1px solid rgba(0,0,0,.08);transition:background .5s,color .5s,border-color .5s}
+.bar .name{font-weight:600;font-size:20px;letter-spacing:-.02em}
+.bar nav{margin-left:auto;display:flex;gap:1.4rem;font-size:13px;letter-spacing:-.01em;align-items:center}
+.bar nav a{text-decoration:none;color:#424245}
+.bar nav a:hover{color:var(--ink)}
+.bar .cta{color:#fff!important;background:var(--orange);padding:.44rem 1rem;border-radius:999px;font-weight:600}
+.bar a:focus-visible,.btn:focus-visible{outline:2px solid var(--orange);outline-offset:3px;border-radius:999px}
+html.dark .bar{background:rgba(22,22,23,.72);color:#f5f5f7;border-color:rgba(255,255,255,.1)}
+html.dark .bar nav a{color:#d2d2d7}
+html.dark .bar nav a:hover{color:#fff}
+.load{position:fixed;left:0;top:0;height:2px;width:0;background:var(--orange);z-index:7;transition:width .3s,opacity .6s}
+
+/* ---------- tomas y textos fijos ---------- */
+main{position:relative;z-index:2}
+.shot{position:relative;height:calc(var(--len) * 1vh);height:calc(var(--len) * 1svh)}
+.beat{position:fixed;z-index:3;left:var(--gutter);top:50%;width:min(30rem,36vw);display:flex;flex-direction:column;gap:.9rem;opacity:0;visibility:hidden;pointer-events:none;will-change:opacity,transform;transform:translate3d(0,-50%,0)}
+.beat.r{left:auto;right:var(--gutter)}
+.beat.c{left:50%;width:min(46rem,88vw);text-align:center;align-items:center}
+.beat.low{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 11vh)}
+.beat.top{top:calc(env(safe-area-inset-top,0px) + 9vh)}
+.beat.narrow{width:min(22rem,26vw)}
+.beat.bl{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 9vh);left:var(--bx,var(--gutter));width:min(30rem,34vw)}
+.beat.tl{top:calc(env(safe-area-inset-top,0px) + 13vh);left:var(--bx,var(--gutter));width:min(30rem,34vw)}
+.beat > *{margin:0}
+.eyebrow{font-size:clamp(17px,1.25vw,21px);font-weight:600;color:var(--accent);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.beat h2{font-size:clamp(40px,4.5vw,72px);font-weight:600;line-height:1.03;letter-spacing:-.036em;text-wrap:balance}
+.beat h3{font-size:clamp(30px,3vw,48px);font-weight:600;line-height:1.06;letter-spacing:-.03em;text-wrap:balance}
+.beat p{font-size:clamp(18px,1.32vw,22px);line-height:1.38;color:var(--mute);font-weight:500;letter-spacing:-.016em;text-wrap:pretty}
+.beat p strong{color:var(--ink);font-weight:600}
+.beat .say{font-size:clamp(24px,2.1vw,34px);line-height:1.18;font-weight:600;letter-spacing:-.025em;color:var(--ink)}
+.beat .via{font-size:14px;font-weight:600;color:var(--accent);letter-spacing:.01em}
+.hl{background:linear-gradient(100deg,#ff9a4a,#e5481b 55%,#b5338a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.spec{font-size:14px!important;font-weight:500!important;color:var(--faint)!important;line-height:1.5!important}
+.beat.big h2{font-size:clamp(52px,7.4vw,118px);line-height:1;letter-spacing:-.048em}
+/* texto blanco sobre escenas oscuras */
+.beat.white h2,.beat.white h3,.beat.white p strong,.beat.white .say{color:#fff}
+.beat.white p{color:rgba(255,255,255,.8)}
+.beat.white .eyebrow,.beat.white .via{color:var(--hot)}
+.beat.white .spec{color:rgba(255,255,255,.62)!important}
+.beat.white{text-shadow:0 1px 14px rgba(0,0,0,.22)}
+/* diagrama: botón -> IA -> apps -> listo */
+.flow{display:grid;grid-template-columns:repeat(4,auto);justify-content:start;gap:.5rem 1.6rem;margin-top:.4rem}
+.flow .n{display:flex;flex-direction:column;align-items:center;gap:.55rem;width:5.6rem;text-align:center;font-size:13px;line-height:1.25;font-weight:600;color:var(--faint);transition:color .35s}
+.flow .n i{position:relative;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:#f5f5f7;color:#86868b;font:700 15px/1 var(--sans);font-style:normal;transition:background .35s,color .35s,box-shadow .35s}
+.flow .n i svg{width:24px;height:24px}
+.flow .n:not(:last-child) i::after{content:"";position:absolute;left:calc(100% + 6px);top:50%;width:calc(1.6rem + 2.2rem - 12px);height:2px;background:repeating-linear-gradient(90deg,#d2d2d7 0 6px,transparent 6px 11px)}
+.flow[data-stage="1"] .n:nth-child(-n+1) i,.flow[data-stage="2"] .n:nth-child(-n+2) i,.flow[data-stage="3"] .n:nth-child(-n+3) i,.flow[data-stage="4"] .n i{background:var(--orange);color:#fff;box-shadow:0 0 0 6px rgba(240,122,42,.16)}
+.flow[data-stage="1"] .n:nth-child(-n+1),.flow[data-stage="2"] .n:nth-child(-n+2),.flow[data-stage="3"] .n:nth-child(-n+3),.flow[data-stage="4"] .n{color:var(--ink)}
+.flow[data-stage="2"] .n:nth-child(1) i::after,.flow[data-stage="3"] .n:nth-child(-n+2) i::after,.flow[data-stage="4"] .n i::after{background:repeating-linear-gradient(90deg,var(--orange) 0 6px,transparent 6px 11px);animation:flowdash .6s linear infinite}
+@keyframes flowdash{to{background-position:11px 0}}
+.chat{display:grid;gap:.8rem;margin-top:.2rem}
+.chat p{display:grid;grid-template-columns:4.4rem 1fr;gap:.6rem;align-items:baseline;color:var(--ink)!important;font-weight:600!important}
+.chat p span{font:600 12px/1 var(--mono);letter-spacing:.04em;color:var(--accent);text-transform:uppercase}
+.chat p.ai{color:var(--mute)!important}
+.list{list-style:none;margin:0;padding:0;display:grid;gap:.55rem}
+.list li{display:grid;grid-template-columns:2rem 1fr;gap:.4rem;align-items:baseline;font-size:clamp(15px,1.05vw,17px);color:var(--mute);font-weight:500;line-height:1.35}
+.list li span{font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;font-size:.85em}
+.hero{position:absolute;left:0;top:0;width:0;height:0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+
+/* ---------- pruébalo ---------- */
+.play{position:relative;min-height:100vh;min-height:100svh;padding:clamp(84px,12vh,140px) var(--gutter) clamp(44px,7vh,80px);background:var(--paper);display:flex;flex-direction:column;justify-content:center}
+.play-in{max-width:1240px;margin:0 auto;width:100%;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);grid-template-areas:'. stage' 'copy stage' 'out stage' '. stage';grid-template-rows:1fr auto auto 1fr;column-gap:clamp(24px,4vw,72px);align-items:center}
+.play-in > *{min-width:0}
+.play-copy{grid-area:copy}
+.play-stage{grid-area:stage}
+.play-out{grid-area:out;align-self:start}
+.play-copy .eyebrow{margin:0 0 .6rem}
+.play-copy h2{margin:0;font-size:clamp(44px,5vw,76px);font-weight:600;letter-spacing:-.04em;line-height:1.02}
+.play-copy .lead{margin:.9rem 0 0;font-size:clamp(19px,1.5vw,23px);color:var(--mute);font-weight:500;letter-spacing:-.016em}
+.play-out{margin-top:clamp(28px,5vh,56px);min-height:14rem;border-top:1px solid var(--line);padding-top:clamp(20px,3vh,32px);display:flex;flex-direction:column;gap:.6rem;transition:opacity .25s ease}
+.play-out.swap{opacity:0}
+.play-out p,.play-out h3{margin:0}
+.po-ctl{font:600 12.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.po-h{font-size:clamp(28px,2.6vw,40px);font-weight:600;letter-spacing:-.03em;line-height:1.08;text-wrap:balance}
+.po-say{font-size:clamp(18px,1.4vw,21px);font-weight:600;color:var(--ink);letter-spacing:-.016em;line-height:1.35;text-wrap:pretty}
+.po-res{font-size:clamp(16px,1.2vw,18px);color:var(--mute);font-weight:500;display:flex;gap:.55rem;align-items:baseline}
+.po-res::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:#34c77b;transform:translateY(-1px)}
+.play-out.idle .po-res::before{display:none}
+.play-stage{position:relative;display:flex;flex-direction:column;align-items:center}
+.play-dev{position:relative;height:min(72vh,800px);aspect-ratio:var(--ar,.6);max-width:100%}
+.play-dev img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .45s ease;pointer-events:none;user-select:none}
+.play-dev img.on{opacity:1}
+.play-shadow{position:absolute;left:14%;right:14%;bottom:3.5%;height:5%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.18),rgba(0,0,0,0));filter:blur(4px)}
+.hs{position:absolute;z-index:2;width:46px;height:46px;margin:-23px 0 0 -23px;border:0;padding:0;border-radius:50%;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hs::before{content:"";position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px var(--orange),0 2px 10px rgba(0,0,0,.25);transition:transform .25s,background .25s}
+.hs::after{content:"";position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;border:1.5px solid var(--orange);opacity:0;animation:hsbeat 2.8s ease-out infinite}
+.hs:hover::before,.hs:focus-visible::before{transform:scale(1.25)}
+.hs.on::before{background:var(--orange)}
+.hs.on::after{animation:none}
+.hs span{position:absolute;left:50%;bottom:calc(100% - 2px);transform:translate(-50%,4px);white-space:nowrap;font:600 13px/1 var(--sans);color:var(--ink);background:rgba(255,255,255,.96);padding:.45rem .65rem;border-radius:999px;box-shadow:0 2px 12px rgba(0,0,0,.12);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none}
+.hs:hover span,.hs:focus-visible span,.hs.on span{opacity:1;transform:translate(-50%,0)}
+.hs:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+@keyframes hsbeat{0%{transform:scale(1);opacity:.7}70%{transform:scale(3.2);opacity:0}100%{opacity:0}}
+.play-ring{position:absolute;z-index:1;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:2px solid var(--orange);opacity:0;pointer-events:none}
+.play-ring.go{animation:playring 1.1s cubic-bezier(.2,.6,.3,1)}
+@keyframes playring{0%{transform:scale(.6);opacity:.95}100%{transform:scale(6);opacity:0}}
+.play-modes{margin-top:clamp(10px,2vh,18px);min-height:1.4em;font-size:14px;font-weight:500;color:var(--faint);letter-spacing:-.005em;transition:opacity .3s}
+.play-modes b{color:var(--ink);font-weight:600}
+.play-chips{margin-top:clamp(14px,2.5vh,26px);width:100%;display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.chip{font:600 15px/1 var(--sans);letter-spacing:-.01em;color:var(--ink);background:#fff;border:1px solid var(--line);padding:.62rem 1.05rem;border-radius:999px;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+.chip:hover{border-color:#a1a1a6}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+/* frase */
+.statement{position:relative;background:var(--paper);padding:clamp(100px,20vh,220px) var(--gutter);text-align:center}
+.statement p{margin:0 auto;max-width:18ch;font-size:clamp(46px,7.6vw,116px);font-weight:700;line-height:1.02;letter-spacing:-.048em;text-wrap:balance}
+.statement p span{background:linear-gradient(100deg,#ff9a4a,#e5481b 55%,#b5338a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.statement small{display:block;margin-top:1.6rem;font-size:clamp(18px,1.5vw,22px);color:var(--mute);font-weight:500;letter-spacing:-.012em}
+
+/* después del recorrido */
+.after{position:relative;z-index:5;background:var(--paper)}
+.reserve{padding:clamp(90px,16vh,180px) var(--gutter);text-align:center;background:var(--panel)}
+.reserve .eyebrow{display:block;margin-bottom:.8rem}
+.reserve h2{margin:0;font-size:clamp(48px,6.6vw,96px);font-weight:700;letter-spacing:-.045em;line-height:1}
+.reserve > p{margin:1.2rem auto 2.4rem;max-width:36ch;font-size:clamp(19px,1.6vw,24px);color:var(--mute);font-weight:500;letter-spacing:-.016em}
+.btn{display:inline-block;text-decoration:none;background:var(--orange);color:#fff;font-weight:600;font-size:18px;padding:.95rem 1.9rem;border-radius:999px;letter-spacing:-.01em;border:0;cursor:pointer;font-family:inherit}
+.btn[disabled]{opacity:.6;cursor:default}
+.rform{max-width:640px;margin:0 auto;text-align:left;display:grid;gap:14px}
+.rrow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.rform label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--mute);letter-spacing:-.005em}
+.rform label i{font-style:normal;font-weight:500;color:var(--faint)}
+.rform input,.rform select{font:500 17px/1.2 var(--sans);letter-spacing:-.01em;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:12px;padding:.85rem 1rem;width:100%;appearance:none;-webkit-appearance:none}
+.rform select{background-image:linear-gradient(45deg,transparent 50%,#86868b 50%),linear-gradient(135deg,#86868b 50%,transparent 50%);background-position:calc(100% - 20px) 50%,calc(100% - 15px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:2.4rem}
+.rform input:focus,.rform select:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 4px rgba(240,122,42,.15)}
+.rform input[aria-invalid="true"]{border-color:#e5481b}
+.rform .btn{justify-self:center;margin-top:10px;min-width:15rem}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.rmsg{margin:0;min-height:1.3em;text-align:center;font-size:15px;font-weight:500;color:#c4320f}
+.rnote{margin:0;text-align:center;font-size:13px;color:var(--faint)}
+.rdone{max-width:36rem;margin:0 auto}
+.rdone h3{margin:0;font-size:clamp(28px,3vw,40px);font-weight:600;letter-spacing:-.03em}
+.rdone p{margin:.8rem 0 0;font-size:19px;color:var(--mute);font-weight:500}
+.essentials{padding:clamp(72px,12vh,140px) var(--gutter) clamp(40px,8vh,80px);max-width:1180px;margin:0 auto}
+.essentials h2,.specs h2{font-size:clamp(38px,5vw,64px);font-weight:600;letter-spacing:-.035em;line-height:1.05;margin:0 0 clamp(28px,5vh,52px)}
+.bento{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,16.5rem),1fr));gap:20px}
+.card{background:var(--panel);border-radius:28px;padding:clamp(26px,3vw,40px);display:flex;flex-direction:column;gap:.5rem;min-width:0}
+.card .big{font-size:clamp(44px,4.6vw,66px);font-weight:700;letter-spacing:-.045em;line-height:1;background:linear-gradient(100deg,#ff9a4a,#e5481b);-webkit-background-clip:text;background-clip:text;color:transparent;font-variant-numeric:tabular-nums}
+.card .big small{font-size:.5em;letter-spacing:-.02em}
+.card p{margin:0;font-size:17px;line-height:1.4;color:var(--mute);font-weight:500}
+.card p strong{color:var(--ink);font-weight:600}
+.specs{padding:clamp(40px,8vh,90px) var(--gutter) 40px;max-width:1180px;margin:0 auto}
+.rows{margin:0;border-top:1px solid var(--line)}
+.rows div{display:grid;grid-template-columns:minmax(8rem,14rem) 1fr;gap:1.2rem 2rem;padding:1.15rem 0;border-bottom:1px solid var(--line)}
+.rows dt{font-weight:600;font-size:17px}
+.rows dd{margin:0;color:var(--mute);font-size:17px;min-width:0}
+.foot{max-width:1180px;margin:0 auto;padding:28px var(--gutter) 48px;font-size:12px;color:var(--faint);display:flex;flex-wrap:wrap;gap:.4rem 2rem;justify-content:space-between}
+
+/* ---------- teléfono / vertical ---------- */
+@media (max-aspect-ratio: 19/20), (max-width: 720px){
+  .bar nav a:not(.cta){display:none}
+  .beat,.beat.r,.beat.c,.beat.narrow,.beat.bl,.beat.tl{left:var(--gutter);right:var(--gutter);width:auto;top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 4.5svh);text-align:left;align-items:flex-start;gap:.6rem}
+  .beat.c.mid{top:50%;bottom:auto;text-align:center;align-items:center}
+  .beat:not(.keep).white h2,.beat:not(.keep).white h3,.beat:not(.keep).white p strong,.beat:not(.keep).white .say{color:var(--ink)}
+  .beat:not(.keep).white p{color:var(--mute)}
+  .beat:not(.keep).white .eyebrow,.beat:not(.keep).white .via{color:var(--accent)}
+  .beat:not(.keep).white .spec{color:var(--faint)!important}
+  .beat.white:not(.keep){text-shadow:none}
+  .beat h2{font-size:clamp(30px,8.4vw,44px)}
+  .beat h3{font-size:clamp(26px,7vw,36px)}
+  .beat.big h2{font-size:clamp(40px,11vw,60px)}
+  .beat p{font-size:16.5px}
+  .beat .say{font-size:22px}
+  .flow{grid-template-columns:repeat(4,1fr);gap:.4rem .5rem;width:100%}
+  .flow .n{width:auto;font-size:11.5px}
+  .flow .n i{width:46px;height:46px}
+  .flow .n:not(:last-child) i::after{width:calc(100% - 4px)}
+  .chat p{grid-template-columns:3.6rem 1fr}
+  .scrim{display:none}
+  .rows div{grid-template-columns:1fr;gap:.3rem}
+  .rrow{grid-template-columns:1fr}
+  .tag b,.tag.hot b{display:none}
+  .pulse span{display:none}
+  .pin small{display:none}
+  .play{padding-top:76px;padding-bottom:28px}
+  .play-in{grid-template-columns:minmax(0,1fr);grid-template-areas:'copy' 'stage' 'out';grid-template-rows:auto;row-gap:10px}
+  .play-stage{width:100%}
+  .play-copy .lead{display:none}
+  .play-dev{height:min(44svh,440px)}
+  .play-copy h2{font-size:clamp(34px,9.6vw,48px)}
+  .play-out{min-height:10.5rem;margin-top:8px;padding-top:14px}
+  .play-modes{margin-top:6px;font-size:12.5px}
+  .play-chips{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding-bottom:6px;scrollbar-width:none;margin-top:8px}
+  .play-chips::-webkit-scrollbar{display:none}
+  .chip{flex:none}
+  .hs span{display:none}
+  .pin b{font-size:12.5px}
+  #timecard b{font-size:23vw}
+}
+@media (prefers-reduced-motion: reduce){
+  .hint,.pulse i,.flow .n i::after{animation:none}
+}
+</style>
+</head>
+<body>
+
+<div class="film" id="filmwrap" aria-hidden="true">
+  <canvas id="film"></canvas>
+  <div class="scrim" id="scrim"></div>
+  <div class="herocap" id="herocap"><p class="by">Meier Instruments</p><p class="tl">Desliza para encenderlo</p><span class="hint"></span></div>
+  <div class="pulse" id="pulse"><i></i><i></i><i></i><b></b><span>→ tu IA</span></div>
+  <div class="pins" id="pins"></div>
+  <div class="tags" id="tags"></div>
+</div>
+<div id="notif" aria-hidden="true"><div class="app"><i></i><i></i></div><div><div class="meta"><span>MEIER1</span><span>ahora</span></div><strong></strong><p></p></div><img alt=""></div>
+<div id="timecard" aria-hidden="true"><b></b><span></span></div>
+<div class="load" id="load"></div>
+
+<header class="bar">
+  <span class="name">MEIER1</span>
+  <nav aria-label="Secciones">
+    <a href="#diseno">Diseño</a><a href="#ia">Tu IA</a><a href="#pruebalo">Pruébalo</a><a href="#dentro">Por dentro</a><a href="#especificaciones">Especificaciones</a><a class="cta" href="#reservar">Reservar</a>
+  </nav>
+</header>
+
+<main>
+  <h1 class="vh">MEIER1, un instrumento de bolsillo que conecta tus botones con tu IA</h1>
+
+  <!-- ============ 1 · revelación ============ -->
+  <section class="shot" data-kind="seq" data-id="c01" data-n="64" data-mw="0.56" data-text="white" data-tx="x" data-txlen="30" style="--len:380">
+    <div class="beat c low keep white" data-at=".47" data-h=".06"><h3>Despierta cuando lo tomas.</h3></div>
+    <div class="beat" data-at=".88" data-h=".07" data-text="ink">
+      <p class="eyebrow">MEIER1</p>
+      <h2>Tu IA. Con botones de verdad.</h2>
+      <p><strong>Un instrumento de bolsillo para quien trabaja con IA.</strong> Aprietas un botón y tu IA hace el resto: escribe, avisa, compra, vigila.</p>
+    </div>
+  </section>
+
+  <!-- ============ 2 · 360: todos los lados ============ -->
+  <section class="shot" id="diseno" data-kind="seq" data-id="c13" data-n="144" data-text="ink" data-tx="x" data-txlen="40"
+    data-pins="flap@.1-.21,m1@.1-.21,m2@.1-.21,cam@.28-.39,thermal@.28-.39,touchpad@.28-.39,home@.28-.39,lightbar@.46-.57,privacy@.46-.57,spk_l@.64-.75,usb@.64-.75,spk_r@.64-.75,magnet_r@.64-.75,cover@.8-.9,trigger@.8-.9" style="--len:680">
+    <div class="beat" data-at=".0" data-h=".01" data-dr="1" data-k="1" data-y="0" data-ft="0"></div>
+    <div class="beat c low" data-at=".06" data-h=".03" data-dr="0" data-k=".7" data-y="-.075" data-ft=".04"><p class="eyebrow">Diseño</p><h3>Míralo por todos lados.</h3></div>
+    <div class="beat c low" data-at=".155" data-h=".05" data-ft=".16"><p class="eyebrow">Costado derecho</p><h3>M1, M2 y el flap.</h3><p>Tus atajos, a un dedo de distancia.</p></div>
+    <div class="beat c low" data-at=".335" data-h=".05" data-ft=".36"><p class="eyebrow">Espalda</p><h3>Dos cámaras y un touchpad.</h3><p>Una de 5 MP para ver, una térmica FLIR para medir el calor.</p></div>
+    <div class="beat c low" data-at=".515" data-h=".05" data-ft=".54"><p class="eyebrow">Costado izquierdo</p><h3>Luz y privacidad.</h3><p>13 LED de estado y un seguro que corta micrófonos y cámaras.</p></div>
+    <div class="beat c low" data-at=".695" data-h=".05" data-ft=".72" data-k=".7" data-y="-.075"><p class="eyebrow">Abajo</p><h3>Estéreo y USB-C.</h3><p>Dos bocinas, carga y datos, e imanes para accesorios.</p></div>
+    <div class="beat c low" data-at=".85" data-h=".045" data-ft=".86" data-k=".6" data-y="-.11"><p class="eyebrow">Arriba</p><h3>El botón de disparo.</h3><p>Bajo una tapa de seguridad, con lector de huella.</p></div>
+    <div class="beat" data-at=".99" data-h=".01" data-dr="-1.3333" data-k=".88" data-y="0" data-ft="1"></div>
+  </section>
+
+  <!-- ============ 3 · pantalla ============ -->
+  <section class="shot" data-kind="seq" data-id="c02" data-n="88" data-mw="0.52" data-ds="0.88" data-amp="0.2" data-text="ink" data-tx="dip" data-txlen="45" style="--len:420">
+    <div class="beat r" data-at=".14" data-h=".07" data-ft=".16">
+      <p class="eyebrow">Pantalla</p>
+      <h2>Te mira. Y te responde.</h2>
+      <p><strong>Pantalla redonda de 1,28″ bajo vidrio táctil.</strong> Los ojos le dan carácter; la misma pantalla te muestra lo que tu IA encontró.</p>
+    </div>
+    <div class="beat" data-at=".44" data-h=".06" data-ft=".5"><h3>El clima, antes de salir.</h3><p><strong>Temperatura, máxima y mínima</strong> y cómo sigue el día.</p></div>
+    <div class="beat r" data-at=".64" data-h=".06" data-ft=".7"><h3>Tu agenda, de un vistazo.</h3><p><strong>Las próximas citas</strong> y un anillo de color con tu día.</p></div>
+    <div class="beat" data-at=".85" data-h=".06" data-ft=".95"><h3>Tu correo, sin sacar el teléfono.</h3><p><strong>Gira el aro</strong> para cambiar de vista.</p></div>
+  </section>
+
+  <!-- ============ 4 · controles ============ -->
+  <section class="shot" data-kind="seq" data-id="c03" data-n="32" data-ds="0.94" data-text="ink" data-tx="dip" data-txlen="45" data-pins="mic/l70,slider/u70,rec/d110,knob/d150,ia/d110" style="--len:260">
+    <div class="beat" data-at=".5" data-h=".22">
+      <p class="eyebrow">Controles</p>
+      <h2>Se sienten antes de verse.</h2>
+      <p><strong>Un knob de aluminio con clics y un slider con tope magnético.</strong> REC para escuchar, IA para hablarle y dos micrófonos para tu voz.</p>
+    </div>
+  </section>
+
+  <!-- ============ 6 · luz y privacidad ============ -->
+  <section class="shot" data-kind="seq" data-id="c05" data-n="48" data-ds="0.94" data-text="ink" data-tx="dip" data-txlen="45" data-pins="lightbar@.1-.56/r,privacy@.62-.97/r" style="--len:320">
+    <div class="beat" data-at=".3" data-h=".12" data-ft=".4">
+      <p class="eyebrow">Luz</p>
+      <h2>Te avisa sin hacer ruido.</h2>
+      <p><strong>Una barra de 13 LED cambia de color:</strong> tu IA pensando, un mensaje nuevo, una alerta.</p>
+    </div>
+    <div class="beat" data-at=".79" data-h=".11" data-ft=".97">
+      <p class="eyebrow">Privacidad</p>
+      <h2>Un seguro de verdad.</h2>
+      <p><strong>Deslízalo y se cortan micrófonos y cámaras por hardware.</strong> No es un ajuste en una app: es un interruptor.</p>
+    </div>
+  </section>
+
+  <!-- ============ 7 · disparo ============ -->
+  <section class="shot" data-kind="seq" data-id="c06" data-n="40" data-ds="0.94" data-text="ink" data-tx="dip" data-txlen="45" data-pins="cover@.1-.97/u,trigger@.55-.97/l" style="--len:280">
+    <div class="beat r" data-at=".62" data-h=".2">
+      <p class="eyebrow">Botón de disparo</p>
+      <h2>Para lo que no tiene vuelta atrás.</h2>
+      <p><strong>Bajo una tapa de seguridad y con lector de huella.</strong> Para comprar, firmar o pedir ayuda, solo cuando de verdad quieres.</p>
+    </div>
+  </section>
+
+  <!-- ============ 9 · térmica en pantalla ============ -->
+  <section class="shot" data-kind="seq" data-id="c08" data-n="48" data-ds="0.84" data-amp="0.2" data-text="ink" data-tx="dip" data-txlen="45" style="--len:260">
+    <div class="beat r" data-at=".66" data-h=".18" data-ft="1">
+      <p class="eyebrow">Térmica</p>
+      <h2>El calor, en tu pantalla.</h2>
+      <p><strong>Fugas, cortos, motores calientes:</strong> los ves en vivo y tu IA los reporta.</p>
+      <p class="spec">Lepton 3.5 radiométrica · 160 × 120 · −10 a 400 °C</p>
+    </div>
+  </section>
+
+  <!-- ============ 11 · tu IA ============ -->
+  <section class="shot" id="ia" data-kind="scene" data-id="ia" data-sid="studio" data-states="ia,m1,m2,eyes,rec" data-text="ink" data-tx="portal" data-txlen="70" style="--len:520">
+    <div class="beat" data-at=".13" data-h=".07" data-s="0">
+      <p class="eyebrow">Tu IA, en un botón</p>
+      <h2>Se conecta con la IA que ya usas.</h2>
+      <p><strong>Por Wi-Fi o Bluetooth,</strong> MEIER1 habla con tu IA favorita y, a través de ella, con tu calendario, tu correo y tus apps.</p>
+    </div>
+    <div class="beat" data-at=".38" data-h=".09" data-s="1" data-pulse="m1" data-steps="4">
+      <h3>Aprietas. Tu IA lo hace.</h3>
+      <div class="flow">
+        <div class="n"><i>M1</i>Aprietas M1</div>
+        <div class="n"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg></i>Tu IA entiende</div>
+        <div class="n"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></i>Lee agenda y correo</div>
+        <div class="n"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></i>Manda el reporte</div>
+      </div>
+    </div>
+    <div class="beat" data-at=".62" data-h=".09" data-s="2" data-pulse="m2">
+      <h3>Lo programas hablando.</h3>
+      <p><strong>MEIER1 funciona como servidor MCP:</strong> tu IA ve sus botones, su pantalla y sus sensores como herramientas.</p>
+      <div class="chat">
+        <p><span>Tú</span>«Cuando apriete M2, dime mis pendientes, lo urgente primero.»</p>
+        <p class="ai"><span>Tu IA</span>«Listo. M2 quedó programado.»</p>
+      </div>
+      <p class="spec">Model Context Protocol · Wi-Fi 2,4 GHz · Bluetooth LE</p>
+    </div>
+    <div class="beat" data-at=".86" data-h=".06" data-s="4">
+      <p class="eyebrow">En tu día</p>
+      <h2>Tú diriges. <span class="hl">Él se encarga del resto.</span></h2>
+      <p><strong>09:00.</strong> Junta con tu equipo.</p>
+    </div>
+  </section>
+
+  <!-- ============ 14 · junta 09:00 ============ -->
+  <section class="shot" id="dia" data-kind="scene" data-id="meeting" data-states="rec,done" data-bg="img" data-fx="0.6" data-text="ink" data-tx="zx" data-txlen="70" style="--len:320">
+    <div class="beat bl" style="--bx:27vw" data-at=".24" data-h=".09" data-s="0" data-z="1" data-pulse="rec">
+      <p class="eyebrow">09:00 · REC</p>
+      <h2>Escucha la junta por ti.</h2>
+      <p><strong>Presionas REC y te olvidas.</strong> Sus dos micrófonos captan la conversación completa mientras tú participas.</p>
+    </div>
+    <div class="beat bl" style="--bx:27vw" data-at=".66" data-h=".1" data-s="1" data-z="1.45">
+      <h3>Al terminar, la minuta ya está en el correo de todos.</h3>
+      <p><strong>Acuerdos y tareas con responsable y fecha,</strong> un minuto después de cerrar.</p>
+    </div>
+  </section>
+
+  <!-- ============ 19 · noche 22:30 ============ -->
+  <section class="shot" data-kind="scene" data-id="night" data-states="alert,c10,c20,c30,c40,c50,c60,c70,c80,c90,c95,buy" data-bg="img" data-fx="0.56" data-text="white"
+    data-time="22:30" data-timelabel="Antes de dormir" data-navdark="1" style="--len:360">
+    <div class="beat bl" data-at=".2" data-h=".08" data-s="0" data-z="1">
+      <p class="eyebrow">22:30 · Botón de disparo</p>
+      <h2>Tu precio llegó.</h2>
+      <p><strong>NOVA tocó los $185 que esperabas.</strong> MEIER1 vibra y te muestra la alerta.</p>
+    </div>
+    <div class="beat bl" data-at=".49" data-h=".05" data-s="1" data-z="1.15"><p class="say">Abres la tapa…</p></div>
+    <div class="beat bl" data-at=".64" data-h=".02" data-s="10" data-z="1.3"></div>
+    <div class="beat bl" data-at=".8" data-h=".08" data-s="11" data-z="1.4" data-pulse="missile">
+      <h3>Tu huella confirma la compra.</h3>
+      <p><strong>Un toque y la orden sale.</strong> Sin abrir ninguna app.</p>
+    </div>
+  </section>
+
+</main>
+
+<div class="after">
+  <section class="play" id="pruebalo" aria-labelledby="play-t">
+    <div class="play-in">
+      <div class="play-copy">
+        <p class="eyebrow">Pruébalo</p>
+        <h2 id="play-t">Toca un control.</h2>
+        <p class="lead">Cada uno le pide algo distinto a tu IA.</p>
+      </div>
+      <div class="play-stage">
+        <div class="play-dev" id="playdev"><div class="play-shadow"></div><i class="play-ring" id="playring"></i></div>
+        <div class="play-modes" id="playmodes" aria-hidden="true"></div>
+        <div class="play-chips" role="toolbar" aria-label="Controles del MEIER1" id="playchips"></div>
+      </div>
+      <div class="play-out" aria-live="polite">
+        <p class="po-ctl"></p>
+        <h3 class="po-h"></h3>
+        <p class="po-say"></p>
+        <p class="po-res"></p>
+      </div>
+    </div>
+  </section>
+  <section class="statement" aria-label="Lo que tú quieras">
+    <p>Lo que tú quieras. <span>El mundo, en tus manos.</span></p>
+    <small>Cada botón, conectado de forma inalámbrica a tu IA.</small>
+  </section>
+</div>
+
+<main>
+  <!-- ============ 22 · por dentro ============ -->
+  <section class="shot" id="dentro" data-kind="seq" data-id="c10" data-n="48" data-mw="1" data-ds="0.76" data-amp="0.14" data-text="ink" data-tx="x" style="--len:300">
+    <div class="beat" data-at=".24" data-h=".12" data-ft=".1">
+      <p class="eyebrow">Por dentro</p>
+      <h2>Cada pieza, en su lugar.</h2>
+      <p><strong>Aluminio, acero y vidrio alrededor de una tarjeta hecha a la medida.</strong> Nada sobra.</p>
+    </div>
+  </section>
+  <section class="shot" data-kind="seq" data-id="c11" data-n="64" data-mw="1" data-ds="0.76" data-amp="0.14" data-text="ink" data-tx="x" style="--len:440">
+    <div class="beat narrow" data-at=".14" data-h=".07">
+      <p class="eyebrow">La cara</p>
+      <ul class="list">
+        <li><span>02</span>Frente con antena integrada</li>
+        <li><span>03</span>Pantalla redonda de 1,28″</li>
+        <li><span>04</span>Knob, slider, REC e IA</li>
+        <li><span>05</span>Aro de acero y vidrio táctil</li>
+      </ul>
+    </div>
+    <div class="beat narrow" data-at=".38" data-h=".07">
+      <p class="eyebrow">El cuerpo</p>
+      <ul class="list">
+        <li><span>01</span>Chasis de aluminio</li>
+        <li><span>06</span>Teclas M1, M2 y flap</li>
+        <li><span>07</span>Barra de luz y seguro de privacidad</li>
+        <li><span>08</span>Botón de disparo con huella</li>
+      </ul>
+    </div>
+    <div class="beat narrow" data-at=".62" data-h=".07">
+      <p class="eyebrow">El cerebro</p>
+      <ul class="list">
+        <li><span>09</span>Wi-Fi, Bluetooth, dos micrófonos y dos bocinas</li>
+        <li><span>10</span>Cámara térmica y cámara de 5 MP</li>
+      </ul>
+    </div>
+    <div class="beat narrow" data-at=".86" data-h=".07">
+      <p class="eyebrow">La espalda</p>
+      <ul class="list">
+        <li><span>11</span>Batería de 600 mAh</li>
+        <li><span>12</span>Touchpad en toda la espalda</li>
+        <li><span>13</span>Home y encendido</li>
+      </ul>
+    </div>
+  </section>
+  <section class="shot" data-kind="seq" data-id="c12" data-n="48" data-mw="1" data-mw2="0.55" data-ds="0.76" data-amp="0.14" data-text="ink" style="--len:300">
+    <div class="beat big" data-at=".8" data-h=".1">
+      <h2>MEIER1.</h2>
+      <p><strong>Tu IA. Con botones de verdad.</strong></p>
+    </div>
+  </section>
+</main>
+
+<div class="after">
+  <section class="reserve" id="reservar" aria-labelledby="res">
+    <span class="eyebrow">Primer lote</span>
+    <h2 id="res">Reserva tu MEIER1.</h2>
+    <p>Tus botones, tu IA y todo lo que se te ocurra pedirles. Sin pago: te avisamos primero cuando abra el primer lote.</p>
+    <form class="rform" id="rform" novalidate>
+      <div class="rrow">
+        <label><span>Nombre</span><input name="nombre" autocomplete="name" required maxlength="80"></label>
+        <label><span>Correo</span><input name="correo" type="email" autocomplete="email" inputmode="email" required maxlength="160"></label>
+      </div>
+      <div class="rrow">
+        <label><span>Ciudad <i>(opcional)</i></span><input name="ciudad" autocomplete="address-level2" maxlength="80"></label>
+        <label><span>¿Para qué lo usarías?</span><select name="uso"><option value="">Elige una opción</option><option>Trabajo</option><option>Mi negocio</option><option>Casa</option><option>Un poco de todo</option></select></label>
+      </div>
+      <input class="hp" name="web" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn" type="submit">Reservar el mío</button>
+      <p class="rmsg" id="rmsg" role="status" aria-live="polite"></p>
+      <p class="rnote">Solo usamos tu correo para avisarte del lanzamiento.</p>
+    </form>
+    <div class="rdone" id="rdone" hidden><h3></h3><p>Te escribimos primero cuando abra el primer lote.</p></div>
+  </section>
+
+  <section class="essentials" aria-labelledby="esencial">
+    <h2 id="esencial">Lo esencial.</h2>
+    <div class="bento">
+      <div class="card"><span class="big">43<small> mm</small></span><p><strong>de ancho,</strong> 79,7 de alto y 14 de grosor.</p></div>
+      <div class="card"><span class="big">13</span><p><strong>controles físicos,</strong> más un touchpad que cubre la espalda.</p></div>
+      <div class="card"><span class="big">19 200</span><p><strong>píxeles térmicos</strong> que miden temperatura.</p></div>
+      <div class="card"><span class="big">2 + 2</span><p><strong>bocinas estéreo y micrófonos</strong> para hablar con tu IA.</p></div>
+      <div class="card"><span class="big">600<small> mAh</small></span><p><strong>de batería,</strong> con carga y datos por USB-C.</p></div>
+      <div class="card"><span class="big">MCP</span><p><strong>Tu IA ve cada botón y sensor</strong> como una herramienta.</p></div>
+    </div>
+  </section>
+
+  <section class="specs" id="especificaciones" aria-labelledby="ficha">
+    <h2 id="ficha">Especificaciones técnicas</h2>
+    <dl class="rows">
+      <div><dt>Medidas y peso</dt><dd>43,0 × 79,7 × 14,0 mm · 70 g aprox.</dd></div>
+      <div><dt>Conexión con tu IA</dt><dd>Wi-Fi 2,4 GHz y Bluetooth LE (ESP32-S3R8, 8 MB de PSRAM) · servidor MCP para programar botones y sensores</dd></div>
+      <div><dt>Pantalla</dt><dd>GC9A01 redonda de 1,28″, 240 × 240 px, táctil CST816S bajo vidrio de 37 mm</dd></div>
+      <div><dt>Cámaras</dt><dd>FLIR Lepton 3.5 térmica radiométrica de 160 × 120 · OV5640 de 5 MP</dd></div>
+      <div><dt>Audio</dt><dd>2 micro bocinas estéreo de 13 × 7 mm con amplificadores MAX98357A · 2 micrófonos MEMS</dd></div>
+      <div><dt>Controles</dt><dd>Aro giratorio, knob, slider, REC, IA, flap, M1, M2, disparo con huella bajo tapa de seguridad, Home y palanca de encendido</dd></div>
+      <div><dt>Sensores</dt><dd>IMU LSM6DSOX · 2 × TMAG5273 · sensores Hall del aro · touchpad IQS7211E</dd></div>
+      <div><dt>Luz y vibración</dt><dd>7 LED RGB y 6 LED blancos regulables · DRV2605L con motor 0827</dd></div>
+      <div><dt>Privacidad</dt><dd>Corte por hardware de micrófonos y cámaras</dd></div>
+      <div><dt>Ubicación</dt><dd>GPS del teléfono o la laptop enlazados</dd></div>
+      <div><dt>Energía y puerto</dt><dd>LiPo 603035 de ~600 mAh · USB-C 2.0 con datos y doble rol · 2 imanes para accesorios</dd></div>
+      <div><dt>Carcasa</dt><dd>Marco de aluminio 6061-T6 anodizado plata y tapas blancas mate</dd></div>
+    </dl>
+  </section>
+  <footer class="foot"><span>MEIER1 · Meier Instruments</span><span>Imágenes ilustrativas. Las pantallas muestran ejemplos de uso.</span></footer>
+</div>
+
+<script>
+(() => {
+  const FW = 1600, FH = 900;
+  const D = {"call":{"c10":[[[0.5,0.497],[0.48,0.503],[0.488,0.457],[0.483,0.749],[0.474,0.453],[0.587,0.607],[0.425,0.504],[0.445,0.178],[0.504,0.503],[0.544,0.24],[0.507,0.521],[0.518,0.613],[0.512,0.494]],[[0.5,0.497],[0.48,0.503],[0.488,0.457],[0.483,0.749],[0.474,0.453],[0.587,0.607],[0.425,0.504],[0.445,0.178],[0.504,0.503],[0.544,0.24],[0.507,0.521],[0.518,0.613],[0.512,0.494]],[[0.5,0.497],[0.48,0.503],[0.488,0.457],[0.483,0.749],[0.474,0.453],[0.587,0.608],[0.425,0.504],[0.445,0.179],[0.504,0.503],[0.544,0.24],[0.507,0.521],[0.518,0.613],[0.512,0.494]],[[0.5,0.497],[0.48,0.504],[0.488,0.458],[0.483,0.749],[0.474,0.453],[0.586,0.608],[0.425,0.504],[0.445,0.179],[0.504,0.503],[0.544,0.24],[0.507,0.521],[0.518,0.613],[0.512,0.494]],[[0.5,0.497],[0.48,0.504],[0.488,0.458],[0.483,0.749],[0.474,0.453],[0.586,0.608],[0.425,0.504],[0.446,0.18],[0.504,0.503],[0.544,0.241],[0.507,0.521],[0.519,0.613],[0.512,0.495]],[[0.5,0.498],[0.48,0.504],[0.488,0.459],[0.483,0.749],[0.474,0.454],[0.586,0.608],[0.426,0.504],[0.446,0.181],[0.504,0.504],[0.544,0.242],[0.507,0.522],[0.519,0.614],[0.512,0.495]],[[0.5,0.499],[0.48,0.505],[0.488,0.459],[0.483,0.749],[0.474,0.455],[0.586,0.609],[0.426,0.505],[0.446,0.183],[0.504,0.504],[0.544,0.244],[0.507,0.522],[0.519,0.614],[0.512,0.496]],[[0.5,0.499],[0.48,0.506],[0.488,0.461],[0.483,0.748],[0.475,0.456],[0.585,0.609],[0.427,0.506],[0.447,0.186],[0.504,0.505],[0.544,0.246],[0.507,0.523],[0.519,0.614],[0.512,0.497]],[[0.501,0.501],[0.481,0.507],[0.488,0.462],[0.484,0.748],[0.475,0.458],[0.584,0.61],[0.428,0.507],[0.448,0.189],[0.504,0.506],[0.543,0.249],[0.508,0.524],[0.519,0.615],[0.512,0.498]],[[0.501,0.502],[0.481,0.508],[0.489,0.464],[0.484,0.747],[0.475,0.46],[0.584,0.611],[0.429,0.508],[0.449,0.192],[0.505,0.508],[0.543,0.253],[0.508,0.525],[0.519,0.615],[0.513,0.499]],[[0.501,0.504],[0.481,0.51],[0.489,0.466],[0.484,0.746],[0.475,0.462],[0.583,0.612],[0.43,0.509],[0.45,0.197],[0.505,0.509],[0.543,0.257],[0.508,0.527],[0.52,0.616],[0.513,0.501]],[[0.502,0.505],[0.481,0.512],[0.489,0.468],[0.485,0.745],[0.476,0.464],[0.582,0.613],[0.432,0.51],[0.451,0.202],[0.505,0.511],[0.543,0.262],[0.509,0.528],[0.52,0.616],[0.514,0.502]],[[0.502,0.507],[0.482,0.514],[0.49,0.47],[0.485,0.745],[0.476,0.467],[0.58,0.614],[0.434,0.512],[0.452,0.207],[0.506,0.513],[0.543,0.267],[0.509,0.53],[0.52,0.617],[0.516,0.504]],[[0.502,0.51],[0.482,0.516],[0.49,0.473],[0.485,0.744],[0.476,0.469],[0.579,0.615],[0.436,0.514],[0.454,0.213],[0.506,0.515],[0.543,0.272],[0.509,0.532],[0.521,0.618],[0.519,0.505]],[[0.503,0.512],[0.483,0.518],[0.491,0.476],[0.486,0.742],[0.475,0.473],[0.578,0.617],[0.438,0.515],[0.456,0.219],[0.507,0.517],[0.542,0.278],[0.51,0.534],[0.521,0.618],[0.525,0.506]],[[0.503,0.515],[0.483,0.521],[0.491,0.479],[0.486,0.741],[0.472,0.477],[0.576,0.618],[0.44,0.517],[0.457,0.226],[0.507,0.52],[0.542,0.285],[0.511,0.536],[0.522,0.619],[0.534,0.506]],[[0.504,0.517],[0.484,0.523],[0.492,0.482],[0.487,0.74],[0.465,0.483],[0.575,0.62],[0.442,0.519],[0.459,0.233],[0.508,0.522],[0.542,0.291],[0.511,0.538],[0.525,0.619],[0.548,0.504]],[[0.505,0.52],[0.485,0.526],[0.493,0.486],[0.486,0.739],[0.452,0.49],[0.573,0.621],[0.445,0.521],[0.461,0.24],[0.508,0.525],[0.542,0.298],[0.512,0.541],[0.531,0.618],[0.567,0.501]],[[0.505,0.522],[0.485,0.529],[0.493,0.489],[0.483,0.74],[0.431,0.499],[0.572,0.623],[0.447,0.523],[0.463,0.247],[0.509,0.527],[0.542,0.305],[0.512,0.543],[0.541,0.615],[0.592,0.497]],[[0.506,0.525],[0.486,0.531],[0.494,0.492],[0.475,0.743],[0.402,0.51],[0.57,0.624],[0.45,0.525],[0.465,0.255],[0.509,0.53],[0.546,0.311],[0.513,0.545],[0.557,0.611],[0.621,0.491]],[[0.507,0.528],[0.487,0.534],[0.495,0.496],[0.461,0.748],[0.364,0.524],[0.569,0.626],[0.452,0.528],[0.467,0.262],[0.51,0.533],[0.554,0.317],[0.517,0.547],[0.578,0.604],[0.653,0.485]],[[0.507,0.531],[0.488,0.536],[0.495,0.499],[0.44,0.755],[0.32,0.539],[0.569,0.628],[0.455,0.53],[0.469,0.269],[0.511,0.535],[0.568,0.321],[0.524,0.547],[0.604,0.597],[0.685,0.479]],[[0.508,0.533],[0.488,0.539],[0.496,0.502],[0.413,0.765],[0.272,0.555],[0.573,0.632],[0.456,0.531],[0.471,0.276],[0.512,0.538],[0.588,0.325],[0.537,0.546],[0.632,0.588],[0.715,0.474]],[[0.509,0.536],[0.489,0.541],[0.497,0.505],[0.382,0.775],[0.226,0.57],[0.58,0.637],[0.454,0.531],[0.473,0.28],[0.512,0.54],[0.612,0.327],[0.555,0.543],[0.66,0.581],[0.74,0.471]],[[0.509,0.538],[0.487,0.544],[0.498,0.509],[0.35,0.786],[0.188,0.582],[0.59,0.645],[0.45,0.53],[0.475,0.278],[0.513,0.543],[0.638,0.329],[0.576,0.539],[0.685,0.574],[0.758,0.469]],[[0.51,0.541],[0.482,0.549],[0.498,0.511],[0.32,0.795],[0.162,0.591],[0.602,0.653],[0.443,0.528],[0.477,0.269],[0.516,0.544],[0.664,0.33],[0.599,0.535],[0.706,0.57],[0.769,0.47]],[[0.511,0.543],[0.471,0.554],[0.498,0.515],[0.296,0.801],[0.15,0.596],[0.615,0.663],[0.436,0.524],[0.479,0.254],[0.521,0.545],[0.687,0.332],[0.622,0.531],[0.721,0.568],[0.773,0.473]],[[0.512,0.545],[0.457,0.56],[0.495,0.518],[0.28,0.804],[0.149,0.597],[0.627,0.673],[0.428,0.52],[0.481,0.235],[0.53,0.545],[0.705,0.334],[0.641,0.529],[0.729,0.567],[0.775,0.476]],[[0.512,0.547],[0.439,0.566],[0.49,0.522],[0.273,0.803],[0.153,0.598],[0.636,0.682],[0.422,0.516],[0.483,0.215],[0.542,0.544],[0.717,0.338],[0.656,0.527],[0.732,0.569],[0.776,0.479]],[[0.513,0.549],[0.42,0.573],[0.484,0.526],[0.273,0.801],[0.158,0.598],[0.642,0.69],[0.417,0.513],[0.485,0.197],[0.555,0.543],[0.723,0.342],[0.667,0.527],[0.732,0.571],[0.777,0.482]],[[0.513,0.551],[0.403,0.579],[0.477,0.53],[0.276,0.797],[0.162,0.598],[0.645,0.695],[0.415,0.51],[0.486,0.182],[0.569,0.542],[0.725,0.346],[0.672,0.528],[0.733,0.573],[0.778,0.485]],[[0.514,0.553],[0.388,0.584],[0.469,0.534],[0.278,0.794],[0.166,0.598],[0.644,0.699],[0.415,0.509],[0.488,0.172],[0.581,0.541],[0.725,0.35],[0.674,0.53],[0.734,0.575],[0.779,0.488]],[[0.514,0.554],[0.376,0.588],[0.462,0.537],[0.28,0.791],[0.169,0.598],[0.641,0.701],[0.417,0.509],[0.489,0.167],[0.592,0.54],[0.725,0.355],[0.674,0.532],[0.734,0.577],[0.779,0.491]],[[0.515,0.556],[0.368,0.59],[0.456,0.54],[0.282,0.788],[0.173,0.598],[0.638,0.702],[0.419,0.509],[0.49,0.167],[0.6,0.54],[0.725,0.358],[0.675,0.534],[0.735,0.579],[0.78,0.493]],[[0.515,0.557],[0.364,0.592],[0.451,0.543],[0.284,0.786],[0.175,0.598],[0.635,0.703],[0.422,0.509],[0.491,0.169],[0.606,0.54],[0.725,0.362],[0.675,0.536],[0.735,0.58],[0.781,0.496]],[[0.516,0.558],[0.362,0.593],[0.447,0.545],[0.285,0.784],[0.178,0.598],[0.632,0.704],[0.425,0.51],[0.492,0.173],[0.61,0.541],[0.725,0.365],[0.675,0.538],[0.736,0.582],[0.781,0.498]],[[0.516,0.559],[0.362,0.594],[0.445,0.546],[0.287,0.782],[0.181,0.597],[0.629,0.705],[0.428,0.511],[0.493,0.177],[0.612,0.542],[0.725,0.368],[0.675,0.539],[0.736,0.583],[0.781,0.5]],[[0.516,0.56],[0.363,0.594],[0.444,0.548],[0.288,0.78],[0.183,0.597],[0.627,0.705],[0.43,0.511],[0.494,0.181],[0.613,0.543],[0.725,0.37],[0.676,0.54],[0.736,0.584],[0.782,0.501]],[[0.517,0.561],[0.364,0.594],[0.444,0.549],[0.289,0.779],[0.184,0.597],[0.625,0.706],[0.432,0.511],[0.495,0.184],[0.614,0.544],[0.725,0.372],[0.676,0.541],[0.736,0.585],[0.782,0.503]],[[0.517,0.561],[0.364,0.595],[0.443,0.549],[0.29,0.778],[0.186,0.597],[0.624,0.707],[0.433,0.512],[0.495,0.186],[0.614,0.544],[0.725,0.374],[0.676,0.542],[0.736,0.586],[0.782,0.504]],[[0.517,0.562],[0.365,0.595],[0.444,0.55],[0.291,0.777],[0.187,0.597],[0.622,0.707],[0.435,0.512],[0.496,0.188],[0.614,0.545],[0.725,0.376],[0.676,0.543],[0.737,0.586],[0.782,0.505]],[[0.517,0.562],[0.365,0.595],[0.444,0.55],[0.292,0.776],[0.188,0.597],[0.621,0.707],[0.436,0.512],[0.496,0.19],[0.614,0.546],[0.725,0.377],[0.676,0.544],[0.737,0.587],[0.783,0.506]],[[0.517,0.562],[0.366,0.595],[0.444,0.55],[0.292,0.775],[0.189,0.597],[0.621,0.708],[0.436,0.512],[0.496,0.191],[0.614,0.546],[0.725,0.378],[0.676,0.544],[0.737,0.587],[0.783,0.506]],[[0.517,0.563],[0.366,0.595],[0.444,0.551],[0.292,0.775],[0.19,0.597],[0.62,0.708],[0.437,0.513],[0.497,0.192],[0.614,0.546],[0.725,0.378],[0.676,0.544],[0.737,0.588],[0.783,0.507]],[[0.517,0.563],[0.366,0.595],[0.444,0.551],[0.293,0.775],[0.19,0.597],[0.62,0.708],[0.437,0.513],[0.497,0.192],[0.614,0.546],[0.725,0.379],[0.676,0.545],[0.737,0.588],[0.783,0.507]],[[0.517,0.563],[0.366,0.595],[0.444,0.551],[0.293,0.775],[0.19,0.597],[0.619,0.708],[0.437,0.513],[0.497,0.193],[0.614,0.547],[0.725,0.379],[0.676,0.545],[0.737,0.588],[0.783,0.507]],[[0.517,0.563],[0.366,0.595],[0.444,0.551],[0.293,0.774],[0.19,0.597],[0.619,0.708],[0.438,0.513],[0.497,0.193],[0.614,0.547],[0.725,0.379],[0.676,0.545],[0.737,0.588],[0.783,0.507]],[[0.517,0.563],[0.366,0.595],[0.444,0.551],[0.293,0.774],[0.19,0.597],[0.619,0.708],[0.438,0.513],[0.497,0.193],[0.614,0.547],[0.725,0.379],[0.676,0.545],[0.737,0.588],[0.783,0.507]]],"c11":[[[0.517,0.563],[0.366,0.595],[0.444,0.551],[0.293,0.774],[0.19,0.597],[0.619,0.708],[0.438,0.513],[0.497,0.193],[0.614,0.547],[0.725,0.379],[0.676,0.545],[0.737,0.588],[0.783,0.507]],[[0.517,0.563],[0.366,0.595],[0.444,0.551],[0.293,0.774],[0.19,0.597],[0.619,0.708],[0.438,0.513],[0.497,0.193],[0.614,0.547],[0.725,0.379],[0.676,0.545],[0.737,0.588],[0.783,0.507]],[[0.517,0.563],[0.366,0.595],[0.444,0.551],[0.293,0.774],[0.19,0.597],[0.619,0.708],[0.438,0.513],[0.497,0.193],[0.614,0.547],[0.725,0.379],[0.676,0.545],[0.737,0.588],[0.783,0.507]],[[0.517,0.563],[0.366,0.595],[0.444,0.551],[0.293,0.774],[0.19,0.597],[0.619,0.708],[0.438,0.512],[0.497,0.193],[0.614,0.547],[0.725,0.379],[0.676,0.545],[0.737,0.588],[0.783,0.507]],[[0.517,0.563],[0.366,0.595],[0.444,0.551],[0.293,0.774],[0.19,0.597],[0.619,0.708],[0.438,0.512],[0.497,0.193],[0.615,0.547],[0.725,0.379],[0.676,0.545],[0.737,0.588],[0.783,0.507]],[[0.517,0.563],[0.366,0.595],[0.444,0.551],[0.292,0.774],[0.19,0.597],[0.618,0.709],[0.438,0.512],[0.497,0.193],[0.615,0.547],[0.725,0.379],[0.677,0.545],[0.738,0.588],[0.784,0.507]],[[0.517,0.563],[0.366,0.595],[0.444,0.551],[0.292,0.774],[0.189,0.597],[0.618,0.71],[0.439,0.511],[0.497,0.193],[0.615,0.546],[0.726,0.379],[0.677,0.545],[0.738,0.588],[0.785,0.507]],[[0.518,0.563],[0.365,0.595],[0.444,0.551],[0.292,0.773],[0.189,0.596],[0.617,0.711],[0.44,0.51],[0.498,0.193],[0.615,0.546],[0.726,0.379],[0.678,0.545],[0.739,0.588],[0.786,0.507]],[[0.518,0.563],[0.365,0.595],[0.444,0.551],[0.291,0.773],[0.188,0.596],[0.616,0.712],[0.441,0.509],[0.498,0.192],[0.616,0.546],[0.727,0.379],[0.678,0.545],[0.74,0.588],[0.787,0.507]],[[0.518,0.563],[0.365,0.595],[0.443,0.551],[0.291,0.772],[0.188,0.596],[0.614,0.713],[0.442,0.508],[0.498,0.192],[0.616,0.547],[0.728,0.379],[0.679,0.545],[0.741,0.588],[0.789,0.507]],[[0.518,0.563],[0.364,0.594],[0.443,0.551],[0.29,0.771],[0.187,0.595],[0.612,0.715],[0.444,0.507],[0.499,0.192],[0.617,0.547],[0.729,0.379],[0.68,0.545],[0.743,0.588],[0.79,0.507]],[[0.518,0.563],[0.364,0.594],[0.443,0.55],[0.29,0.77],[0.186,0.595],[0.61,0.717],[0.446,0.506],[0.499,0.192],[0.618,0.547],[0.731,0.38],[0.682,0.545],[0.745,0.589],[0.793,0.508]],[[0.518,0.563],[0.363,0.593],[0.443,0.55],[0.289,0.769],[0.185,0.594],[0.608,0.719],[0.448,0.504],[0.5,0.192],[0.618,0.547],[0.732,0.38],[0.683,0.546],[0.746,0.589],[0.795,0.508]],[[0.518,0.563],[0.362,0.593],[0.442,0.55],[0.288,0.767],[0.184,0.592],[0.605,0.721],[0.45,0.502],[0.501,0.191],[0.619,0.547],[0.734,0.381],[0.684,0.546],[0.749,0.59],[0.798,0.509]],[[0.518,0.563],[0.362,0.592],[0.442,0.55],[0.287,0.765],[0.183,0.591],[0.602,0.723],[0.453,0.5],[0.501,0.191],[0.62,0.548],[0.736,0.382],[0.686,0.547],[0.751,0.591],[0.801,0.51]],[[0.518,0.563],[0.361,0.591],[0.442,0.549],[0.287,0.763],[0.183,0.589],[0.598,0.726],[0.456,0.499],[0.502,0.191],[0.621,0.548],[0.738,0.383],[0.688,0.548],[0.754,0.592],[0.804,0.512]],[[0.518,0.563],[0.36,0.59],[0.441,0.549],[0.286,0.761],[0.182,0.586],[0.594,0.729],[0.46,0.497],[0.503,0.191],[0.622,0.549],[0.74,0.384],[0.69,0.549],[0.756,0.594],[0.808,0.513]],[[0.519,0.563],[0.36,0.589],[0.441,0.548],[0.285,0.758],[0.181,0.584],[0.59,0.731],[0.463,0.495],[0.504,0.19],[0.624,0.55],[0.742,0.386],[0.692,0.55],[0.759,0.596],[0.812,0.516]],[[0.519,0.563],[0.359,0.587],[0.44,0.548],[0.284,0.755],[0.18,0.58],[0.585,0.734],[0.467,0.493],[0.506,0.19],[0.625,0.551],[0.744,0.388],[0.694,0.552],[0.762,0.598],[0.816,0.518]],[[0.519,0.563],[0.358,0.585],[0.44,0.547],[0.284,0.751],[0.18,0.577],[0.579,0.737],[0.471,0.491],[0.507,0.19],[0.626,0.552],[0.747,0.39],[0.696,0.554],[0.765,0.601],[0.82,0.521]],[[0.519,0.563],[0.358,0.584],[0.44,0.546],[0.283,0.747],[0.18,0.573],[0.574,0.74],[0.476,0.489],[0.508,0.19],[0.627,0.554],[0.749,0.393],[0.698,0.556],[0.769,0.605],[0.824,0.525]],[[0.519,0.563],[0.357,0.581],[0.439,0.545],[0.283,0.743],[0.18,0.568],[0.568,0.742],[0.481,0.488],[0.509,0.19],[0.628,0.555],[0.751,0.395],[0.7,0.559],[0.772,0.608],[0.829,0.529]],[[0.519,0.563],[0.357,0.579],[0.439,0.544],[0.283,0.739],[0.18,0.564],[0.561,0.745],[0.486,0.486],[0.511,0.19],[0.629,0.557],[0.753,0.399],[0.702,0.562],[0.775,0.612],[0.833,0.534]],[[0.519,0.564],[0.356,0.577],[0.439,0.543],[0.283,0.734],[0.181,0.558],[0.555,0.747],[0.491,0.485],[0.512,0.19],[0.63,0.559],[0.755,0.402],[0.704,0.565],[0.778,0.617],[0.837,0.539]],[[0.519,0.564],[0.356,0.574],[0.439,0.542],[0.283,0.729],[0.181,0.553],[0.548,0.749],[0.496,0.484],[0.514,0.19],[0.631,0.561],[0.756,0.406],[0.706,0.568],[0.781,0.622],[0.841,0.544]],[[0.52,0.564],[0.356,0.571],[0.439,0.541],[0.283,0.724],[0.183,0.547],[0.54,0.751],[0.502,0.483],[0.515,0.19],[0.632,0.564],[0.758,0.41],[0.708,0.572],[0.784,0.627],[0.845,0.551]],[[0.52,0.565],[0.357,0.569],[0.439,0.54],[0.284,0.719],[0.185,0.541],[0.533,0.752],[0.508,0.483],[0.517,0.19],[0.633,0.566],[0.759,0.414],[0.709,0.576],[0.786,0.633],[0.848,0.557]],[[0.52,0.565],[0.357,0.566],[0.439,0.539],[0.285,0.714],[0.187,0.535],[0.525,0.753],[0.514,0.482],[0.518,0.19],[0.633,0.569],[0.76,0.418],[0.71,0.58],[0.788,0.639],[0.852,0.564]],[[0.52,0.565],[0.357,0.563],[0.439,0.538],[0.286,0.709],[0.189,0.529],[0.517,0.754],[0.52,0.482],[0.52,0.19],[0.633,0.571],[0.761,0.422],[0.711,0.585],[0.79,0.646],[0.855,0.571]],[[0.52,0.566],[0.358,0.56],[0.439,0.536],[0.288,0.704],[0.192,0.523],[0.509,0.755],[0.526,0.483],[0.522,0.19],[0.634,0.574],[0.761,0.427],[0.712,0.589],[0.792,0.652],[0.857,0.579]],[[0.52,0.566],[0.359,0.557],[0.439,0.535],[0.289,0.699],[0.196,0.517],[0.5,0.755],[0.532,0.483],[0.523,0.191],[0.634,0.577],[0.761,0.432],[0.713,0.594],[0.793,0.659],[0.859,0.586]],[[0.519,0.567],[0.36,0.554],[0.44,0.534],[0.291,0.693],[0.199,0.511],[0.492,0.755],[0.538,0.484],[0.525,0.191],[0.634,0.58],[0.76,0.436],[0.713,0.598],[0.794,0.666],[0.861,0.594]],[[0.519,0.567],[0.362,0.551],[0.44,0.533],[0.294,0.688],[0.203,0.505],[0.484,0.754],[0.544,0.484],[0.526,0.191],[0.633,0.583],[0.76,0.441],[0.713,0.603],[0.795,0.673],[0.862,0.602]],[[0.519,0.567],[0.363,0.548],[0.441,0.532],[0.296,0.683],[0.208,0.499],[0.475,0.754],[0.55,0.485],[0.528,0.192],[0.633,0.586],[0.758,0.446],[0.712,0.608],[0.795,0.68],[0.863,0.61]],[[0.519,0.568],[0.365,0.545],[0.441,0.53],[0.299,0.679],[0.212,0.494],[0.467,0.753],[0.556,0.487],[0.529,0.192],[0.632,0.589],[0.757,0.45],[0.712,0.612],[0.794,0.687],[0.863,0.618]],[[0.519,0.568],[0.367,0.543],[0.442,0.529],[0.302,0.674],[0.217,0.488],[0.459,0.752],[0.562,0.488],[0.531,0.192],[0.631,0.591],[0.755,0.454],[0.711,0.617],[0.794,0.694],[0.863,0.626]],[[0.519,0.569],[0.369,0.54],[0.443,0.528],[0.305,0.67],[0.223,0.484],[0.451,0.75],[0.568,0.49],[0.532,0.193],[0.63,0.594],[0.752,0.459],[0.709,0.621],[0.792,0.701],[0.862,0.634]],[[0.518,0.569],[0.371,0.538],[0.443,0.527],[0.309,0.666],[0.228,0.479],[0.444,0.748],[0.574,0.491],[0.533,0.193],[0.629,0.597],[0.75,0.462],[0.708,0.626],[0.791,0.708],[0.861,0.641]],[[0.518,0.569],[0.373,0.536],[0.444,0.526],[0.312,0.662],[0.233,0.475],[0.436,0.746],[0.579,0.494],[0.535,0.193],[0.627,0.599],[0.747,0.466],[0.706,0.63],[0.789,0.714],[0.859,0.648]],[[0.518,0.57],[0.375,0.534],[0.445,0.525],[0.316,0.659],[0.239,0.471],[0.429,0.744],[0.584,0.496],[0.536,0.194],[0.626,0.601],[0.743,0.469],[0.704,0.633],[0.787,0.72],[0.857,0.655]],[[0.518,0.57],[0.377,0.532],[0.446,0.525],[0.319,0.656],[0.244,0.468],[0.422,0.741],[0.589,0.498],[0.537,0.194],[0.624,0.603],[0.74,0.471],[0.702,0.637],[0.784,0.725],[0.854,0.661]],[[0.517,0.57],[0.38,0.531],[0.447,0.524],[0.323,0.654],[0.25,0.466],[0.416,0.738],[0.594,0.501],[0.538,0.195],[0.623,0.605],[0.736,0.474],[0.699,0.64],[0.782,0.73],[0.851,0.666]],[[0.517,0.571],[0.382,0.53],[0.448,0.524],[0.326,0.652],[0.255,0.464],[0.41,0.734],[0.598,0.504],[0.539,0.195],[0.621,0.606],[0.732,0.475],[0.697,0.642],[0.779,0.734],[0.848,0.671]],[[0.517,0.571],[0.384,0.529],[0.449,0.523],[0.33,0.651],[0.261,0.462],[0.404,0.731],[0.603,0.507],[0.539,0.195],[0.619,0.608],[0.728,0.476],[0.695,0.644],[0.776,0.738],[0.845,0.675]],[[0.517,0.571],[0.386,0.529],[0.45,0.523],[0.333,0.65],[0.266,0.461],[0.399,0.728],[0.607,0.51],[0.54,0.196],[0.617,0.609],[0.724,0.477],[0.692,0.646],[0.773,0.741],[0.841,0.678]],[[0.516,0.571],[0.389,0.528],[0.451,0.523],[0.336,0.649],[0.271,0.46],[0.394,0.724],[0.61,0.513],[0.541,0.196],[0.616,0.61],[0.72,0.477],[0.689,0.648],[0.769,0.744],[0.838,0.68]],[[0.516,0.572],[0.391,0.528],[0.451,0.523],[0.34,0.649],[0.276,0.46],[0.39,0.721],[0.614,0.516],[0.541,0.196],[0.614,0.61],[0.717,0.477],[0.687,0.649],[0.766,0.746],[0.834,0.682]],[[0.516,0.572],[0.393,0.528],[0.452,0.523],[0.343,0.649],[0.28,0.46],[0.386,0.717],[0.617,0.519],[0.542,0.196],[0.612,0.611],[0.713,0.476],[0.684,0.649],[0.763,0.747],[0.83,0.684]],[[0.516,0.572],[0.394,0.528],[0.453,0.523],[0.345,0.649],[0.284,0.461],[0.382,0.714],[0.619,0.521],[0.542,0.197],[0.611,0.611],[0.709,0.475],[0.682,0.65],[0.76,0.749],[0.827,0.684]],[[0.515,0.572],[0.396,0.529],[0.454,0.523],[0.348,0.65],[0.288,0.461],[0.378,0.711],[0.622,0.524],[0.543,0.197],[0.609,0.611],[0.706,0.474],[0.68,0.65],[0.757,0.749],[0.824,0.684]],[[0.515,0.572],[0.398,0.529],[0.455,0.524],[0.35,0.65],[0.292,0.462],[0.376,0.708],[0.624,0.526],[0.543,0.197],[0.608,0.611],[0.703,0.472],[0.678,0.65],[0.755,0.749],[0.82,0.684]],[[0.515,0.572],[0.399,0.53],[0.455,0.524],[0.352,0.651],[0.295,0.463],[0.373,0.705],[0.626,0.529],[0.544,0.197],[0.607,0.611],[0.7,0.471],[0.676,0.65],[0.752,0.749],[0.817,0.684]],[[0.515,0.572],[0.4,0.53],[0.456,0.524],[0.354,0.652],[0.298,0.464],[0.371,0.702],[0.628,0.531],[0.544,0.197],[0.606,0.61],[0.697,0.469],[0.674,0.649],[0.75,0.749],[0.815,0.683]],[[0.515,0.572],[0.402,0.531],[0.456,0.524],[0.356,0.653],[0.3,0.466],[0.369,0.7],[0.629,0.532],[0.544,0.197],[0.605,0.61],[0.695,0.467],[0.672,0.649],[0.748,0.749],[0.812,0.682]],[[0.514,0.572],[0.403,0.531],[0.457,0.525],[0.357,0.654],[0.302,0.467],[0.367,0.698],[0.631,0.534],[0.544,0.198],[0.604,0.61],[0.693,0.466],[0.671,0.648],[0.746,0.748],[0.81,0.681]],[[0.514,0.572],[0.403,0.532],[0.457,0.525],[0.358,0.654],[0.304,0.468],[0.366,0.697],[0.632,0.535],[0.544,0.198],[0.603,0.609],[0.692,0.465],[0.67,0.647],[0.745,0.748],[0.808,0.68]],[[0.514,0.572],[0.404,0.532],[0.457,0.525],[0.359,0.655],[0.305,0.469],[0.364,0.695],[0.633,0.536],[0.544,0.198],[0.602,0.609],[0.69,0.463],[0.669,0.647],[0.744,0.747],[0.807,0.679]],[[0.514,0.572],[0.405,0.533],[0.457,0.525],[0.36,0.656],[0.306,0.469],[0.364,0.694],[0.633,0.537],[0.544,0.198],[0.602,0.609],[0.689,0.462],[0.668,0.647],[0.743,0.747],[0.806,0.678]],[[0.514,0.572],[0.405,0.533],[0.458,0.525],[0.361,0.656],[0.307,0.47],[0.363,0.693],[0.634,0.538],[0.545,0.198],[0.602,0.608],[0.688,0.462],[0.668,0.646],[0.742,0.746],[0.805,0.677]],[[0.514,0.572],[0.405,0.533],[0.458,0.525],[0.361,0.656],[0.308,0.47],[0.363,0.693],[0.634,0.539],[0.545,0.198],[0.601,0.608],[0.688,0.461],[0.668,0.646],[0.741,0.746],[0.805,0.677]],[[0.514,0.572],[0.405,0.533],[0.458,0.525],[0.361,0.657],[0.308,0.471],[0.362,0.692],[0.634,0.539],[0.545,0.198],[0.601,0.608],[0.688,0.461],[0.667,0.646],[0.741,0.746],[0.804,0.677]],[[0.514,0.572],[0.405,0.533],[0.458,0.526],[0.361,0.657],[0.308,0.471],[0.362,0.692],[0.634,0.539],[0.545,0.198],[0.601,0.608],[0.687,0.46],[0.667,0.646],[0.741,0.746],[0.804,0.676]],[[0.514,0.572],[0.405,0.533],[0.458,0.526],[0.362,0.657],[0.309,0.471],[0.362,0.692],[0.634,0.539],[0.545,0.198],[0.601,0.608],[0.687,0.46],[0.667,0.646],[0.741,0.745],[0.804,0.676]],[[0.514,0.572],[0.405,0.533],[0.458,0.526],[0.362,0.657],[0.309,0.471],[0.362,0.692],[0.634,0.539],[0.545,0.198],[0.601,0.608],[0.687,0.46],[0.667,0.646],[0.741,0.745],[0.804,0.676]]],"c12":[[[0.514,0.572],[0.405,0.533],[0.458,0.526],[0.362,0.657],[0.309,0.471],[0.362,0.692],[0.634,0.539],[0.545,0.198],[0.601,0.608],[0.687,0.46],[0.667,0.646],[0.741,0.745],[0.804,0.676]],[[0.514,0.572],[0.405,0.533],[0.458,0.526],[0.361,0.657],[0.308,0.471],[0.362,0.692],[0.634,0.539],[0.545,0.198],[0.601,0.608],[0.687,0.46],[0.667,0.646],[0.741,0.745],[0.804,0.676]],[[0.514,0.572],[0.405,0.533],[0.458,0.526],[0.361,0.657],[0.308,0.471],[0.362,0.692],[0.634,0.539],[0.545,0.198],[0.601,0.608],[0.688,0.46],[0.667,0.645],[0.741,0.745],[0.804,0.676]],[[0.514,0.572],[0.405,0.533],[0.458,0.525],[0.361,0.657],[0.307,0.471],[0.363,0.692],[0.634,0.539],[0.545,0.197],[0.602,0.608],[0.688,0.46],[0.668,0.645],[0.742,0.745],[0.805,0.676]],[[0.514,0.572],[0.404,0.533],[0.457,0.525],[0.36,0.657],[0.306,0.471],[0.363,0.692],[0.633,0.538],[0.544,0.197],[0.602,0.607],[0.69,0.459],[0.669,0.645],[0.743,0.745],[0.807,0.675]],[[0.514,0.572],[0.403,0.533],[0.457,0.525],[0.358,0.658],[0.304,0.471],[0.364,0.693],[0.633,0.538],[0.544,0.196],[0.603,0.607],[0.692,0.458],[0.67,0.644],[0.745,0.744],[0.809,0.674]],[[0.514,0.571],[0.402,0.533],[0.457,0.525],[0.356,0.659],[0.301,0.471],[0.365,0.694],[0.632,0.537],[0.544,0.194],[0.604,0.606],[0.694,0.457],[0.672,0.643],[0.748,0.742],[0.813,0.672]],[[0.514,0.571],[0.4,0.534],[0.457,0.525],[0.353,0.66],[0.296,0.472],[0.367,0.695],[0.63,0.536],[0.544,0.192],[0.605,0.605],[0.698,0.455],[0.675,0.642],[0.752,0.741],[0.818,0.67]],[[0.515,0.57],[0.398,0.534],[0.458,0.526],[0.349,0.661],[0.291,0.472],[0.369,0.696],[0.628,0.535],[0.544,0.19],[0.605,0.603],[0.703,0.452],[0.679,0.64],[0.757,0.739],[0.824,0.667]],[[0.515,0.57],[0.397,0.535],[0.462,0.526],[0.344,0.663],[0.285,0.473],[0.372,0.697],[0.625,0.533],[0.543,0.188],[0.601,0.6],[0.709,0.449],[0.683,0.638],[0.763,0.736],[0.831,0.663]],[[0.515,0.569],[0.402,0.537],[0.468,0.528],[0.339,0.665],[0.277,0.473],[0.376,0.699],[0.621,0.532],[0.542,0.191],[0.593,0.595],[0.715,0.445],[0.688,0.636],[0.769,0.733],[0.839,0.659]],[[0.515,0.568],[0.412,0.541],[0.477,0.53],[0.333,0.667],[0.268,0.474],[0.383,0.699],[0.614,0.531],[0.541,0.203],[0.578,0.589],[0.723,0.441],[0.693,0.633],[0.777,0.729],[0.847,0.654]],[[0.515,0.566],[0.43,0.546],[0.487,0.531],[0.326,0.67],[0.258,0.475],[0.395,0.697],[0.602,0.533],[0.54,0.226],[0.56,0.582],[0.729,0.436],[0.692,0.628],[0.785,0.725],[0.857,0.648]],[[0.515,0.565],[0.452,0.551],[0.496,0.532],[0.321,0.675],[0.246,0.476],[0.414,0.691],[0.586,0.536],[0.539,0.257],[0.542,0.576],[0.724,0.428],[0.678,0.619],[0.793,0.719],[0.867,0.641]],[[0.516,0.564],[0.473,0.555],[0.502,0.531],[0.327,0.682],[0.236,0.478],[0.437,0.681],[0.569,0.542],[0.538,0.288],[0.528,0.571],[0.7,0.417],[0.65,0.609],[0.79,0.711],[0.877,0.634]],[[0.516,0.562],[0.488,0.557],[0.503,0.53],[0.348,0.693],[0.237,0.482],[0.459,0.669],[0.554,0.547],[0.536,0.312],[0.52,0.568],[0.659,0.406],[0.613,0.597],[0.766,0.699],[0.878,0.624]],[[0.516,0.56],[0.494,0.557],[0.503,0.528],[0.382,0.706],[0.26,0.489],[0.476,0.66],[0.543,0.55],[0.534,0.323],[0.519,0.565],[0.611,0.394],[0.575,0.588],[0.721,0.683],[0.852,0.61]],[[0.516,0.558],[0.493,0.555],[0.502,0.525],[0.422,0.717],[0.302,0.497],[0.487,0.653],[0.536,0.551],[0.531,0.322],[0.519,0.563],[0.568,0.384],[0.546,0.581],[0.667,0.669],[0.798,0.594]],[[0.515,0.556],[0.492,0.553],[0.501,0.523],[0.457,0.726],[0.355,0.503],[0.493,0.651],[0.532,0.549],[0.528,0.316],[0.519,0.561],[0.539,0.376],[0.529,0.577],[0.615,0.659],[0.73,0.578]],[[0.515,0.553],[0.491,0.551],[0.501,0.52],[0.481,0.731],[0.406,0.507],[0.497,0.65],[0.528,0.546],[0.525,0.31],[0.519,0.559],[0.525,0.369],[0.524,0.574],[0.576,0.651],[0.663,0.566]],[[0.515,0.551],[0.49,0.549],[0.5,0.517],[0.491,0.733],[0.444,0.508],[0.502,0.649],[0.523,0.544],[0.522,0.303],[0.519,0.556],[0.522,0.363],[0.524,0.572],[0.551,0.647],[0.608,0.557]],[[0.514,0.548],[0.489,0.547],[0.499,0.515],[0.492,0.735],[0.467,0.507],[0.506,0.648],[0.518,0.541],[0.518,0.296],[0.518,0.554],[0.524,0.357],[0.523,0.569],[0.541,0.645],[0.569,0.551]],[[0.514,0.545],[0.488,0.545],[0.498,0.511],[0.491,0.736],[0.477,0.505],[0.511,0.647],[0.513,0.538],[0.514,0.289],[0.518,0.551],[0.526,0.35],[0.523,0.567],[0.538,0.644],[0.546,0.547]],[[0.513,0.543],[0.486,0.543],[0.497,0.508],[0.49,0.738],[0.479,0.502],[0.516,0.646],[0.507,0.536],[0.51,0.282],[0.517,0.548],[0.528,0.343],[0.522,0.564],[0.538,0.642],[0.535,0.543]],[[0.512,0.54],[0.485,0.54],[0.496,0.505],[0.489,0.739],[0.478,0.499],[0.521,0.645],[0.502,0.533],[0.505,0.274],[0.516,0.545],[0.53,0.336],[0.522,0.561],[0.537,0.64],[0.53,0.54]],[[0.511,0.537],[0.484,0.538],[0.495,0.502],[0.488,0.741],[0.476,0.496],[0.527,0.643],[0.496,0.531],[0.501,0.266],[0.516,0.542],[0.531,0.328],[0.521,0.558],[0.537,0.639],[0.528,0.537]],[[0.51,0.534],[0.483,0.535],[0.494,0.498],[0.487,0.742],[0.475,0.492],[0.532,0.641],[0.489,0.528],[0.496,0.259],[0.515,0.539],[0.533,0.321],[0.52,0.556],[0.536,0.637],[0.527,0.533]],[[0.509,0.531],[0.482,0.533],[0.493,0.495],[0.486,0.744],[0.474,0.489],[0.538,0.639],[0.483,0.526],[0.491,0.251],[0.514,0.536],[0.534,0.313],[0.519,0.553],[0.535,0.635],[0.526,0.53]],[[0.508,0.527],[0.481,0.53],[0.492,0.491],[0.485,0.746],[0.473,0.486],[0.543,0.637],[0.477,0.523],[0.486,0.243],[0.513,0.533],[0.536,0.305],[0.518,0.55],[0.534,0.634],[0.525,0.527]],[[0.507,0.524],[0.48,0.528],[0.491,0.488],[0.484,0.747],[0.472,0.482],[0.548,0.635],[0.471,0.521],[0.481,0.235],[0.512,0.53],[0.537,0.298],[0.517,0.547],[0.533,0.632],[0.523,0.523]],[[0.506,0.521],[0.479,0.525],[0.49,0.484],[0.483,0.749],[0.472,0.479],[0.553,0.633],[0.465,0.519],[0.477,0.227],[0.511,0.527],[0.538,0.29],[0.516,0.544],[0.531,0.631],[0.522,0.52]],[[0.505,0.518],[0.479,0.523],[0.489,0.481],[0.483,0.75],[0.471,0.476],[0.558,0.631],[0.459,0.517],[0.472,0.219],[0.51,0.524],[0.539,0.283],[0.515,0.542],[0.53,0.629],[0.521,0.517]],[[0.505,0.516],[0.479,0.52],[0.489,0.477],[0.482,0.751],[0.471,0.473],[0.562,0.629],[0.454,0.515],[0.468,0.212],[0.509,0.521],[0.54,0.276],[0.514,0.539],[0.529,0.628],[0.52,0.514]],[[0.504,0.513],[0.478,0.518],[0.488,0.474],[0.482,0.753],[0.471,0.469],[0.566,0.626],[0.449,0.513],[0.464,0.205],[0.508,0.519],[0.541,0.269],[0.513,0.537],[0.528,0.626],[0.519,0.511]],[[0.503,0.51],[0.478,0.516],[0.488,0.471],[0.482,0.754],[0.471,0.467],[0.57,0.624],[0.444,0.512],[0.461,0.199],[0.507,0.516],[0.542,0.263],[0.512,0.534],[0.526,0.625],[0.518,0.508]],[[0.502,0.508],[0.478,0.514],[0.488,0.469],[0.482,0.755],[0.471,0.464],[0.574,0.622],[0.44,0.51],[0.458,0.193],[0.507,0.514],[0.543,0.257],[0.511,0.532],[0.525,0.624],[0.517,0.506]],[[0.502,0.506],[0.478,0.512],[0.487,0.466],[0.481,0.756],[0.471,0.461],[0.577,0.62],[0.437,0.509],[0.455,0.187],[0.506,0.512],[0.543,0.251],[0.51,0.53],[0.524,0.623],[0.516,0.503]],[[0.501,0.504],[0.478,0.51],[0.487,0.464],[0.481,0.757],[0.471,0.459],[0.579,0.619],[0.433,0.508],[0.452,0.182],[0.506,0.51],[0.544,0.247],[0.51,0.528],[0.523,0.622],[0.515,0.501]],[[0.501,0.502],[0.478,0.508],[0.487,0.462],[0.481,0.758],[0.471,0.457],[0.582,0.617],[0.431,0.507],[0.45,0.177],[0.505,0.508],[0.544,0.242],[0.509,0.527],[0.522,0.621],[0.515,0.5]],[[0.501,0.501],[0.478,0.507],[0.487,0.46],[0.481,0.759],[0.472,0.455],[0.584,0.616],[0.428,0.506],[0.448,0.174],[0.505,0.507],[0.545,0.239],[0.509,0.526],[0.522,0.621],[0.514,0.498]],[[0.5,0.499],[0.478,0.506],[0.487,0.459],[0.482,0.759],[0.472,0.454],[0.585,0.615],[0.426,0.505],[0.447,0.171],[0.505,0.506],[0.545,0.236],[0.508,0.525],[0.521,0.62],[0.514,0.497]],[[0.5,0.498],[0.478,0.505],[0.487,0.457],[0.482,0.76],[0.472,0.453],[0.587,0.614],[0.425,0.504],[0.446,0.168],[0.504,0.505],[0.545,0.233],[0.508,0.524],[0.521,0.62],[0.513,0.496]],[[0.5,0.498],[0.478,0.504],[0.487,0.457],[0.482,0.76],[0.472,0.452],[0.587,0.613],[0.424,0.504],[0.445,0.166],[0.504,0.504],[0.545,0.232],[0.508,0.523],[0.52,0.619],[0.513,0.495]],[[0.5,0.497],[0.478,0.504],[0.487,0.456],[0.482,0.76],[0.472,0.451],[0.588,0.613],[0.423,0.504],[0.444,0.165],[0.504,0.503],[0.545,0.23],[0.508,0.523],[0.52,0.619],[0.513,0.494]],[[0.5,0.497],[0.478,0.504],[0.487,0.456],[0.482,0.76],[0.472,0.451],[0.589,0.612],[0.422,0.504],[0.444,0.164],[0.504,0.503],[0.545,0.23],[0.508,0.522],[0.52,0.619],[0.513,0.494]],[[0.5,0.497],[0.478,0.503],[0.487,0.455],[0.482,0.76],[0.472,0.451],[0.589,0.612],[0.422,0.503],[0.444,0.164],[0.504,0.503],[0.545,0.229],[0.508,0.522],[0.52,0.619],[0.513,0.494]],[[0.5,0.497],[0.478,0.503],[0.487,0.455],[0.482,0.76],[0.472,0.451],[0.589,0.612],[0.422,0.503],[0.443,0.163],[0.504,0.503],[0.545,0.229],[0.508,0.522],[0.52,0.619],[0.513,0.494]],[[0.5,0.497],[0.479,0.503],[0.487,0.455],[0.482,0.76],[0.472,0.451],[0.589,0.612],[0.422,0.503],[0.443,0.163],[0.504,0.503],[0.546,0.229],[0.508,0.522],[0.52,0.619],[0.513,0.494]]]},"feat":{"c13":{"flap":[[0.591,0.518,1.0],[0.591,0.518,1.0],[0.591,0.518,1.0],[0.59,0.518,1.0],[0.588,0.518,1.0],[0.586,0.519,1.0],[0.583,0.519,1.0],[0.579,0.52,1.0],[0.574,0.52,1.0],[0.568,0.52,1.0],[0.56,0.52,1.0],[0.552,0.52,1.0],[0.544,0.52,1.0],[0.535,0.52,1.0],[0.526,0.519,1.0],[0.518,0.518,1.0],[0.511,0.517,1.0],[0.505,0.517,1.0],[0.5,0.516,1.0],[0.496,0.516,1.0],[0.493,0.515,1.0],[0.492,0.515,1.0],[0.491,0.515,1.0],[0.491,0.515,1.0],[0.491,0.515,1.0],[0.491,0.515,1.0],[0.489,0.515,1.0],[0.487,0.516,1.0],[0.484,0.516,1.0],[0.479,0.516,1.0],[0.473,0.517,1.0],[0.466,0.518,1.0],[0.458,0.518,1.0],[0.449,0.518,1.0],[0.44,0.519,1.0],[0.431,0.519,1.0],[0.423,0.518,1.0],[0.415,0.518,1.0],[0.408,0.516,1.0],[0.402,0.515,1.0],[0.398,0.513,1.0],[0.394,0.511,1.0],[0.392,0.509,0.76],[0.39,0.507,0.47],[0.389,0.506,0.22],[0.389,0.504,0.01],[0.389,0.503,0.0],[0.389,0.501,0.0],[0.389,0.501,0.0],[0.389,0.5,0.0],[0.389,0.5,0.0],[0.389,0.5,0.0],[0.389,0.5,0.0],[0.389,0.5,0.0],[0.389,0.499,0.0],[0.39,0.498,0.0],[0.39,0.496,0.0],[0.39,0.494,0.0],[0.392,0.49,0.0],[0.394,0.486,0.0],[0.396,0.482,0.0],[0.401,0.477,0.0],[0.406,0.471,0.0],[0.413,0.466,0.0],[0.421,0.46,0.0],[0.43,0.454,0.0],[0.44,0.448,0.0],[0.45,0.442,0.0],[0.459,0.436,0.0],[0.469,0.429,0.0],[0.477,0.422,0.0],[0.484,0.415,0.0],[0.49,0.407,0.0],[0.494,0.399,0.0],[0.497,0.391,0.0],[0.499,0.382,0.0],[0.5,0.373,0.0],[0.5,0.364,0.0],[0.5,0.355,0.0],[0.501,0.346,0.0],[0.502,0.339,0.0],[0.505,0.333,0.0],[0.51,0.328,0.0],[0.517,0.326,0.0],[0.526,0.325,0.0],[0.536,0.327,0.0],[0.548,0.33,0.0],[0.56,0.333,0.0],[0.573,0.337,0.0],[0.586,0.338,0.0],[0.597,0.338,0.0],[0.607,0.334,0.0],[0.615,0.328,0.0],[0.62,0.319,0.0],[0.623,0.309,0.0],[0.623,0.299,0.0],[0.623,0.289,0.0],[0.621,0.281,0.1],[0.619,0.275,0.19],[0.617,0.27,0.25],[0.616,0.267,0.28],[0.615,0.266,0.3],[0.615,0.265,0.31],[0.615,0.265,0.31],[0.615,0.265,0.31],[0.615,0.263,0.34],[0.615,0.258,0.41],[0.615,0.253,0.54],[0.616,0.251,0.72],[0.616,0.258,0.97],[0.616,0.281,1.0],[0.616,0.326,1.0],[0.614,0.393,1.0],[0.612,0.475,1.0],[0.608,0.562,1.0],[0.603,0.641,1.0],[0.598,0.702,1.0],[0.593,0.742,1.0],[0.589,0.765,1.0],[0.586,0.775,1.0],[0.583,0.779,1.0],[0.582,0.779,1.0],[0.582,0.779,1.0],[0.581,0.779,1.0],[0.581,0.779,1.0],[0.582,0.779,1.0],[0.583,0.777,1.0],[0.584,0.773,1.0],[0.586,0.768,1.0],[0.589,0.759,1.0],[0.592,0.746,1.0],[0.595,0.728,1.0],[0.598,0.707,1.0],[0.6,0.682,1.0],[0.603,0.656,1.0],[0.605,0.63,1.0],[0.606,0.606,1.0],[0.608,0.584,1.0],[0.608,0.567,1.0],[0.609,0.554,1.0],[0.609,0.545,1.0],[0.609,0.54,1.0],[0.609,0.538,1.0],[0.609,0.538,1.0]],"m1":[[0.592,0.631,1.0],[0.592,0.631,1.0],[0.591,0.631,1.0],[0.59,0.631,1.0],[0.589,0.632,1.0],[0.587,0.632,1.0],[0.584,0.633,1.0],[0.58,0.634,1.0],[0.574,0.636,1.0],[0.568,0.637,1.0],[0.561,0.638,1.0],[0.553,0.638,1.0],[0.544,0.639,1.0],[0.535,0.639,1.0],[0.527,0.639,1.0],[0.518,0.638,1.0],[0.511,0.638,1.0],[0.505,0.638,1.0],[0.5,0.637,1.0],[0.496,0.637,1.0],[0.493,0.637,1.0],[0.492,0.637,1.0],[0.491,0.637,1.0],[0.491,0.637,1.0],[0.491,0.637,1.0],[0.491,0.637,1.0],[0.489,0.637,1.0],[0.487,0.637,1.0],[0.483,0.637,1.0],[0.479,0.637,1.0],[0.473,0.638,1.0],[0.466,0.638,1.0],[0.458,0.638,1.0],[0.449,0.638,1.0],[0.44,0.637,1.0],[0.431,0.636,1.0],[0.422,0.635,1.0],[0.414,0.634,1.0],[0.407,0.631,1.0],[0.402,0.629,1.0],[0.397,0.626,1.0],[0.394,0.623,1.0],[0.391,0.621,0.75],[0.39,0.618,0.47],[0.389,0.615,0.22],[0.388,0.613,0.01],[0.388,0.611,0.0],[0.388,0.61,0.0],[0.389,0.609,0.0],[0.389,0.608,0.0],[0.389,0.608,0.0],[0.389,0.608,0.0],[0.389,0.608,0.0],[0.389,0.607,0.0],[0.389,0.607,0.0],[0.389,0.606,0.0],[0.389,0.604,0.0],[0.39,0.601,0.0],[0.391,0.598,0.0],[0.393,0.593,0.0],[0.396,0.588,0.0],[0.4,0.583,0.0],[0.406,0.577,0.0],[0.412,0.571,0.0],[0.42,0.565,0.0],[0.429,0.559,0.0],[0.439,0.553,0.0],[0.449,0.547,0.0],[0.459,0.541,0.0],[0.468,0.534,0.0],[0.477,0.528,0.0],[0.484,0.52,0.0],[0.49,0.513,0.0],[0.494,0.505,0.0],[0.497,0.497,0.0],[0.499,0.488,0.0],[0.5,0.479,0.0],[0.5,0.47,0.0],[0.5,0.461,0.0],[0.501,0.453,0.0],[0.502,0.445,0.0],[0.505,0.439,0.0],[0.51,0.435,0.0],[0.517,0.433,0.0],[0.526,0.433,0.0],[0.537,0.435,0.0],[0.549,0.438,0.0],[0.562,0.441,0.0],[0.575,0.443,0.0],[0.588,0.442,0.0],[0.6,0.439,0.0],[0.611,0.432,0.0],[0.619,0.421,0.0],[0.624,0.407,0.0],[0.628,0.392,0.0],[0.629,0.376,0.0],[0.628,0.361,0.0],[0.627,0.348,0.1],[0.625,0.338,0.2],[0.623,0.33,0.26],[0.622,0.325,0.3],[0.621,0.322,0.32],[0.621,0.321,0.32],[0.621,0.321,0.32],[0.621,0.321,0.33],[0.621,0.321,0.36],[0.621,0.321,0.43],[0.621,0.323,0.56],[0.621,0.332,0.75],[0.621,0.354,1.0],[0.621,0.393,1.0],[0.619,0.452,1.0],[0.617,0.53,1.0],[0.613,0.616,1.0],[0.608,0.699,1.0],[0.602,0.766,1.0],[0.597,0.813,1.0],[0.591,0.838,1.0],[0.587,0.846,1.0],[0.584,0.846,1.0],[0.581,0.841,1.0],[0.58,0.838,1.0],[0.58,0.836,1.0],[0.58,0.836,1.0],[0.58,0.836,1.0],[0.58,0.836,1.0],[0.581,0.836,1.0],[0.582,0.835,1.0],[0.584,0.834,1.0],[0.587,0.83,1.0],[0.59,0.823,1.0],[0.593,0.813,1.0],[0.596,0.798,1.0],[0.599,0.779,1.0],[0.602,0.758,1.0],[0.604,0.736,1.0],[0.606,0.714,1.0],[0.608,0.694,1.0],[0.609,0.678,1.0],[0.609,0.665,1.0],[0.61,0.656,1.0],[0.61,0.651,1.0],[0.61,0.649,1.0],[0.61,0.649,1.0]],"m2":[[0.591,0.718,1.0],[0.591,0.718,1.0],[0.591,0.718,1.0],[0.59,0.719,1.0],[0.589,0.719,1.0],[0.586,0.721,1.0],[0.583,0.722,1.0],[0.579,0.723,1.0],[0.574,0.725,1.0],[0.568,0.727,1.0],[0.561,0.728,1.0],[0.553,0.73,1.0],[0.544,0.731,1.0],[0.535,0.731,1.0],[0.527,0.732,1.0],[0.518,0.732,1.0],[0.511,0.732,1.0],[0.505,0.732,1.0],[0.5,0.732,1.0],[0.496,0.731,1.0],[0.493,0.731,1.0],[0.492,0.731,1.0],[0.491,0.731,1.0],[0.491,0.731,1.0],[0.491,0.731,1.0],[0.491,0.731,1.0],[0.489,0.731,1.0],[0.487,0.731,1.0],[0.483,0.731,1.0],[0.479,0.732,1.0],[0.473,0.732,1.0],[0.466,0.731,1.0],[0.458,0.731,1.0],[0.449,0.73,1.0],[0.44,0.729,1.0],[0.431,0.728,1.0],[0.423,0.726,1.0],[0.415,0.724,1.0],[0.408,0.721,1.0],[0.402,0.717,1.0],[0.397,0.714,1.0],[0.394,0.71,1.0],[0.392,0.706,0.74],[0.39,0.703,0.46],[0.389,0.7,0.21],[0.389,0.697,0.0],[0.389,0.695,0.0],[0.389,0.693,0.0],[0.389,0.692,0.0],[0.389,0.691,0.0],[0.389,0.691,0.0],[0.389,0.691,0.0],[0.389,0.691,0.0],[0.389,0.691,0.0],[0.389,0.69,0.0],[0.39,0.689,0.0],[0.39,0.687,0.0],[0.39,0.684,0.0],[0.392,0.68,0.0],[0.394,0.676,0.0],[0.396,0.671,0.0],[0.401,0.665,0.0],[0.406,0.66,0.0],[0.413,0.653,0.0],[0.421,0.647,0.0],[0.43,0.641,0.0],[0.439,0.635,0.0],[0.449,0.629,0.0],[0.459,0.623,0.0],[0.469,0.617,0.0],[0.477,0.61,0.0],[0.484,0.603,0.0],[0.49,0.596,0.0],[0.494,0.588,0.0],[0.497,0.579,0.0],[0.499,0.571,0.0],[0.5,0.562,0.0],[0.5,0.553,0.0],[0.5,0.544,0.0],[0.501,0.536,0.0],[0.502,0.528,0.0],[0.505,0.523,0.0],[0.51,0.519,0.0],[0.517,0.517,0.0],[0.526,0.518,0.0],[0.537,0.52,0.0],[0.549,0.523,0.0],[0.562,0.525,0.0],[0.576,0.527,0.0],[0.589,0.525,0.0],[0.602,0.52,0.0],[0.613,0.511,0.0],[0.621,0.497,0.0],[0.627,0.48,0.0],[0.631,0.46,0.0],[0.632,0.44,0.0],[0.632,0.421,0.0],[0.63,0.404,0.11],[0.628,0.391,0.22],[0.627,0.38,0.28],[0.625,0.374,0.31],[0.625,0.37,0.33],[0.624,0.368,0.34],[0.624,0.368,0.34],[0.624,0.368,0.34],[0.624,0.37,0.38],[0.624,0.374,0.45],[0.624,0.383,0.58],[0.624,0.401,0.78],[0.624,0.434,1.0],[0.623,0.485,1.0],[0.621,0.555,1.0],[0.618,0.639,1.0],[0.613,0.726,1.0],[0.607,0.804,1.0],[0.601,0.861,1.0],[0.595,0.895,1.0],[0.589,0.907,1.0],[0.585,0.905,1.0],[0.582,0.896,1.0],[0.579,0.886,1.0],[0.578,0.879,1.0],[0.577,0.876,0.97],[0.577,0.876,0.96],[0.577,0.876,0.97],[0.578,0.876,0.98],[0.579,0.878,1.0],[0.58,0.88,1.0],[0.582,0.881,1.0],[0.585,0.882,1.0],[0.588,0.88,1.0],[0.591,0.875,1.0],[0.594,0.865,1.0],[0.598,0.851,1.0],[0.601,0.834,1.0],[0.603,0.816,1.0],[0.605,0.796,1.0],[0.607,0.778,1.0],[0.608,0.763,1.0],[0.609,0.751,1.0],[0.609,0.742,1.0],[0.609,0.738,1.0],[0.61,0.736,1.0],[0.61,0.735,1.0]],"cam":[[0.529,0.226,0.0],[0.529,0.226,0.0],[0.53,0.225,0.0],[0.53,0.225,0.0],[0.53,0.225,0.0],[0.531,0.225,0.0],[0.532,0.225,0.0],[0.534,0.225,0.0],[0.535,0.224,0.0],[0.536,0.224,0.0],[0.538,0.224,0.0],[0.539,0.223,0.0],[0.54,0.222,0.0],[0.54,0.222,0.0],[0.541,0.221,0.0],[0.541,0.22,0.0],[0.541,0.22,0.0],[0.541,0.219,0.0],[0.541,0.219,0.0],[0.54,0.218,0.0],[0.54,0.218,0.0],[0.54,0.218,0.0],[0.54,0.218,0.0],[0.54,0.218,0.0],[0.54,0.218,0.0],[0.54,0.218,0.01],[0.54,0.218,0.05],[0.54,0.218,0.13],[0.539,0.218,0.24],[0.539,0.218,0.4],[0.538,0.219,0.6],[0.537,0.219,0.83],[0.536,0.22,1.0],[0.534,0.221,1.0],[0.532,0.221,1.0],[0.529,0.222,1.0],[0.526,0.223,1.0],[0.523,0.225,1.0],[0.52,0.226,1.0],[0.516,0.227,1.0],[0.512,0.228,1.0],[0.509,0.229,1.0],[0.505,0.231,1.0],[0.502,0.232,1.0],[0.5,0.232,1.0],[0.498,0.233,1.0],[0.496,0.234,1.0],[0.495,0.234,1.0],[0.494,0.234,1.0],[0.493,0.234,1.0],[0.493,0.234,1.0],[0.493,0.234,1.0],[0.493,0.234,1.0],[0.493,0.234,1.0],[0.492,0.234,1.0],[0.491,0.233,1.0],[0.49,0.232,1.0],[0.488,0.23,1.0],[0.486,0.228,1.0],[0.483,0.225,1.0],[0.48,0.221,1.0],[0.477,0.216,1.0],[0.473,0.211,1.0],[0.47,0.205,1.0],[0.467,0.199,1.0],[0.464,0.192,1.0],[0.462,0.184,1.0],[0.461,0.177,1.0],[0.46,0.169,1.0],[0.459,0.161,0.88],[0.459,0.152,0.57],[0.459,0.143,0.3],[0.459,0.134,0.08],[0.459,0.125,0.0],[0.459,0.115,0.0],[0.46,0.106,0.0],[0.46,0.096,0.0],[0.46,0.086,0.0],[0.46,0.076,0.0],[0.46,0.067,0.0],[0.46,0.057,0.0],[0.46,0.047,0.0],[0.46,0.039,0.0],[0.461,0.031,0.0],[0.463,0.026,0.0],[0.465,0.024,0.0],[0.467,0.026,0.0],[0.47,0.032,0.0],[0.474,0.043,0.0],[0.479,0.059,0.0],[0.485,0.079,0.0],[0.49,0.102,0.0],[0.496,0.127,0.0],[0.501,0.153,0.0],[0.506,0.178,0.0],[0.511,0.202,0.0],[0.515,0.223,0.0],[0.518,0.24,0.0],[0.52,0.255,0.0],[0.522,0.265,0.0],[0.523,0.272,0.0],[0.524,0.276,0.0],[0.524,0.278,0.0],[0.524,0.278,0.0],[0.524,0.277,0.0],[0.524,0.27,0.0],[0.525,0.255,0.0],[0.525,0.231,0.0],[0.526,0.2,0.0],[0.528,0.167,0.0],[0.529,0.14,0.0],[0.531,0.126,0.0],[0.533,0.131,0.0],[0.535,0.156,0.0],[0.537,0.199,0.0],[0.538,0.25,0.0],[0.54,0.302,0.0],[0.54,0.347,0.0],[0.541,0.382,0.0],[0.541,0.406,0.0],[0.541,0.42,0.0],[0.541,0.428,0.0],[0.541,0.431,0.0],[0.541,0.431,0.0],[0.541,0.431,0.0],[0.541,0.43,0.0],[0.542,0.426,0.0],[0.542,0.42,0.0],[0.542,0.411,0.0],[0.543,0.399,0.0],[0.543,0.383,0.0],[0.544,0.366,0.0],[0.544,0.347,0.0],[0.544,0.327,0.0],[0.544,0.309,0.0],[0.544,0.293,0.0],[0.543,0.28,0.0],[0.543,0.27,0.0],[0.543,0.263,0.0],[0.542,0.258,0.0],[0.542,0.255,0.0],[0.542,0.254,0.0],[0.542,0.253,0.0],[0.542,0.253,0.0]],"thermal":[[0.584,0.229,0.0],[0.584,0.229,0.0],[0.584,0.229,0.0],[0.584,0.229,0.0],[0.584,0.229,0.0],[0.583,0.229,0.0],[0.583,0.228,0.0],[0.582,0.228,0.0],[0.58,0.227,0.0],[0.578,0.227,0.0],[0.575,0.226,0.0],[0.572,0.225,0.0],[0.567,0.223,0.0],[0.563,0.222,0.0],[0.558,0.221,0.0],[0.554,0.219,0.0],[0.549,0.218,0.0],[0.545,0.217,0.0],[0.542,0.216,0.0],[0.54,0.215,0.0],[0.538,0.215,0.0],[0.537,0.215,0.0],[0.537,0.215,0.0],[0.537,0.215,0.0],[0.537,0.215,0.0],[0.536,0.215,0.01],[0.535,0.215,0.06],[0.534,0.215,0.14],[0.531,0.216,0.26],[0.528,0.216,0.43],[0.524,0.217,0.63],[0.518,0.218,0.88],[0.512,0.219,1.0],[0.505,0.221,1.0],[0.497,0.222,1.0],[0.489,0.224,1.0],[0.48,0.226,1.0],[0.472,0.227,1.0],[0.463,0.229,1.0],[0.456,0.23,1.0],[0.449,0.231,1.0],[0.443,0.232,1.0],[0.438,0.233,1.0],[0.434,0.234,1.0],[0.43,0.234,1.0],[0.428,0.234,1.0],[0.426,0.234,1.0],[0.424,0.234,1.0],[0.424,0.234,1.0],[0.423,0.234,1.0],[0.423,0.234,1.0],[0.423,0.234,1.0],[0.423,0.234,1.0],[0.423,0.234,1.0],[0.422,0.234,1.0],[0.422,0.233,1.0],[0.42,0.231,1.0],[0.419,0.229,1.0],[0.417,0.226,1.0],[0.416,0.223,1.0],[0.415,0.218,1.0],[0.414,0.213,1.0],[0.414,0.208,1.0],[0.415,0.203,1.0],[0.418,0.197,1.0],[0.421,0.191,1.0],[0.425,0.184,1.0],[0.43,0.177,1.0],[0.436,0.171,1.0],[0.441,0.163,0.84],[0.446,0.156,0.54],[0.451,0.148,0.28],[0.454,0.14,0.07],[0.457,0.131,0.0],[0.459,0.122,0.0],[0.461,0.113,0.0],[0.461,0.104,0.0],[0.461,0.095,0.0],[0.461,0.085,0.0],[0.462,0.076,0.0],[0.463,0.068,0.0],[0.465,0.061,0.0],[0.469,0.055,0.0],[0.473,0.052,0.0],[0.48,0.052,0.0],[0.488,0.055,0.0],[0.497,0.061,0.0],[0.507,0.071,0.0],[0.519,0.085,0.0],[0.53,0.1,0.0],[0.541,0.117,0.0],[0.551,0.134,0.0],[0.561,0.15,0.0],[0.569,0.166,0.0],[0.575,0.18,0.0],[0.579,0.192,0.0],[0.583,0.202,0.0],[0.585,0.211,0.0],[0.586,0.218,0.0],[0.587,0.223,0.0],[0.587,0.226,0.0],[0.587,0.228,0.0],[0.587,0.229,0.0],[0.587,0.229,0.0],[0.587,0.228,0.0],[0.587,0.221,0.0],[0.588,0.205,0.0],[0.589,0.181,0.0],[0.59,0.15,0.0],[0.592,0.119,0.0],[0.594,0.095,0.0],[0.597,0.088,0.0],[0.599,0.104,0.0],[0.601,0.145,0.0],[0.602,0.206,0.0],[0.602,0.279,0.0],[0.602,0.35,0.0],[0.6,0.411,0.0],[0.599,0.458,0.0],[0.597,0.49,0.0],[0.596,0.51,0.0],[0.596,0.521,0.0],[0.595,0.525,0.0],[0.595,0.525,0.0],[0.595,0.525,0.0],[0.596,0.523,0.0],[0.596,0.518,0.0],[0.597,0.508,0.0],[0.598,0.495,0.0],[0.599,0.476,0.0],[0.6,0.454,0.0],[0.601,0.428,0.0],[0.601,0.4,0.0],[0.602,0.371,0.0],[0.602,0.344,0.0],[0.602,0.32,0.0],[0.601,0.3,0.0],[0.601,0.284,0.0],[0.6,0.273,0.0],[0.599,0.265,0.0],[0.599,0.26,0.0],[0.599,0.257,0.0],[0.599,0.256,0.0],[0.599,0.256,0.0]],"touchpad":[[0.523,0.618,0.0],[0.523,0.618,0.0],[0.523,0.618,0.0],[0.523,0.618,0.0],[0.524,0.618,0.0],[0.525,0.619,0.0],[0.526,0.62,0.0],[0.527,0.62,0.0],[0.529,0.622,0.0],[0.531,0.623,0.0],[0.532,0.624,0.0],[0.534,0.625,0.0],[0.535,0.626,0.0],[0.536,0.628,0.0],[0.537,0.629,0.0],[0.538,0.63,0.0],[0.538,0.631,0.0],[0.538,0.632,0.0],[0.539,0.632,0.0],[0.539,0.633,0.0],[0.539,0.633,0.0],[0.539,0.633,0.0],[0.539,0.633,0.0],[0.539,0.633,0.0],[0.539,0.633,0.0],[0.539,0.633,0.01],[0.539,0.633,0.05],[0.539,0.633,0.13],[0.538,0.633,0.24],[0.538,0.634,0.4],[0.538,0.634,0.59],[0.537,0.634,0.82],[0.536,0.635,1.0],[0.535,0.635,1.0],[0.534,0.636,1.0],[0.532,0.636,1.0],[0.529,0.637,1.0],[0.527,0.638,1.0],[0.524,0.638,1.0],[0.521,0.639,1.0],[0.518,0.639,1.0],[0.515,0.64,1.0],[0.512,0.64,1.0],[0.509,0.64,1.0],[0.507,0.641,1.0],[0.505,0.641,1.0],[0.503,0.641,1.0],[0.502,0.641,1.0],[0.501,0.641,1.0],[0.5,0.641,1.0],[0.5,0.641,1.0],[0.5,0.641,1.0],[0.5,0.641,1.0],[0.5,0.641,1.0],[0.499,0.64,1.0],[0.499,0.64,1.0],[0.497,0.639,1.0],[0.496,0.638,1.0],[0.494,0.636,1.0],[0.491,0.634,1.0],[0.488,0.631,1.0],[0.484,0.627,1.0],[0.481,0.623,1.0],[0.477,0.618,1.0],[0.474,0.613,1.0],[0.471,0.606,1.0],[0.468,0.599,1.0],[0.466,0.592,1.0],[0.464,0.584,1.0],[0.463,0.576,0.88],[0.462,0.568,0.57],[0.462,0.559,0.3],[0.461,0.55,0.08],[0.461,0.54,0.0],[0.461,0.531,0.0],[0.461,0.521,0.0],[0.461,0.512,0.0],[0.461,0.502,0.0],[0.461,0.492,0.0],[0.461,0.483,0.0],[0.461,0.473,0.0],[0.461,0.464,0.0],[0.461,0.454,0.0],[0.461,0.445,0.0],[0.462,0.438,0.0],[0.463,0.431,0.0],[0.464,0.426,0.0],[0.466,0.423,0.0],[0.469,0.423,0.0],[0.473,0.426,0.0],[0.478,0.43,0.0],[0.483,0.437,0.0],[0.488,0.444,0.0],[0.494,0.452,0.0],[0.499,0.459,0.0],[0.504,0.466,0.0],[0.508,0.472,0.0],[0.512,0.476,0.0],[0.515,0.48,0.0],[0.517,0.482,0.0],[0.518,0.484,0.0],[0.519,0.485,0.0],[0.519,0.485,0.0],[0.519,0.485,0.0],[0.519,0.485,0.0],[0.519,0.485,0.0],[0.52,0.484,0.0],[0.52,0.484,0.0],[0.521,0.488,0.0],[0.522,0.499,0.0],[0.524,0.52,0.0],[0.525,0.552,0.0],[0.526,0.592,0.0],[0.528,0.633,0.0],[0.529,0.669,0.0],[0.529,0.693,0.0],[0.53,0.704,0.0],[0.53,0.702,0.0],[0.53,0.692,0.0],[0.53,0.679,0.0],[0.53,0.668,0.0],[0.53,0.66,0.0],[0.53,0.657,0.0],[0.53,0.657,0.0],[0.53,0.657,0.0],[0.531,0.658,0.0],[0.531,0.66,0.0],[0.531,0.664,0.0],[0.532,0.669,0.0],[0.532,0.674,0.0],[0.533,0.679,0.0],[0.534,0.682,0.0],[0.534,0.682,0.0],[0.535,0.68,0.0],[0.535,0.676,0.0],[0.535,0.67,0.0],[0.535,0.663,0.0],[0.535,0.657,0.0],[0.535,0.651,0.0],[0.535,0.646,0.0],[0.535,0.642,0.0],[0.535,0.64,0.0],[0.535,0.64,0.0],[0.535,0.64,0.0]],"home":[[0.56,0.351,0.0],[0.56,0.351,0.0],[0.56,0.351,0.0],[0.559,0.351,0.0],[0.559,0.351,0.0],[0.558,0.351,0.0],[0.557,0.351,0.0],[0.556,0.35,0.0],[0.554,0.35,0.0],[0.552,0.35,0.0],[0.549,0.35,0.0],[0.546,0.349,0.0],[0.543,0.349,0.0],[0.539,0.348,0.0],[0.535,0.347,0.0],[0.531,0.346,0.0],[0.528,0.346,0.0],[0.525,0.345,0.0],[0.522,0.344,0.0],[0.52,0.344,0.0],[0.519,0.344,0.0],[0.518,0.344,0.02],[0.518,0.344,0.03],[0.518,0.344,0.04],[0.518,0.344,0.04],[0.517,0.344,0.06],[0.517,0.344,0.1],[0.516,0.344,0.18],[0.514,0.344,0.3],[0.511,0.345,0.46],[0.508,0.346,0.67],[0.504,0.346,0.91],[0.499,0.347,1.0],[0.494,0.348,1.0],[0.488,0.349,1.0],[0.483,0.35,1.0],[0.477,0.351,1.0],[0.471,0.352,1.0],[0.465,0.352,1.0],[0.46,0.353,1.0],[0.456,0.353,1.0],[0.452,0.354,1.0],[0.449,0.354,1.0],[0.447,0.354,1.0],[0.445,0.353,1.0],[0.443,0.353,1.0],[0.442,0.353,1.0],[0.441,0.353,1.0],[0.441,0.353,1.0],[0.441,0.353,1.0],[0.441,0.353,1.0],[0.441,0.353,1.0],[0.441,0.353,1.0],[0.441,0.352,1.0],[0.44,0.352,1.0],[0.44,0.351,1.0],[0.439,0.35,1.0],[0.439,0.348,1.0],[0.438,0.345,1.0],[0.438,0.342,1.0],[0.437,0.338,1.0],[0.438,0.333,1.0],[0.439,0.328,1.0],[0.44,0.323,1.0],[0.443,0.317,1.0],[0.446,0.31,1.0],[0.45,0.304,1.0],[0.454,0.297,1.0],[0.459,0.29,1.0],[0.463,0.282,0.89],[0.467,0.275,0.58],[0.471,0.267,0.32],[0.474,0.258,0.11],[0.476,0.249,0.0],[0.478,0.24,0.0],[0.479,0.231,0.0],[0.479,0.222,0.0],[0.479,0.212,0.0],[0.479,0.203,0.0],[0.48,0.194,0.0],[0.48,0.185,0.0],[0.482,0.177,0.0],[0.485,0.171,0.0],[0.489,0.165,0.0],[0.494,0.162,0.0],[0.5,0.161,0.0],[0.507,0.163,0.0],[0.514,0.168,0.0],[0.523,0.174,0.0],[0.531,0.182,0.0],[0.539,0.192,0.0],[0.546,0.202,0.0],[0.552,0.212,0.0],[0.557,0.222,0.0],[0.561,0.231,0.0],[0.564,0.239,0.0],[0.565,0.246,0.0],[0.566,0.253,0.0],[0.566,0.258,0.0],[0.567,0.262,0.0],[0.567,0.264,0.0],[0.566,0.266,0.0],[0.566,0.266,0.0],[0.566,0.266,0.0],[0.566,0.265,0.0],[0.567,0.261,0.0],[0.567,0.25,0.0],[0.567,0.233,0.0],[0.568,0.214,0.0],[0.569,0.198,0.0],[0.57,0.193,0.0],[0.571,0.204,0.0],[0.572,0.237,0.0],[0.572,0.289,0.0],[0.572,0.354,0.0],[0.571,0.422,0.0],[0.569,0.482,0.0],[0.568,0.528,0.0],[0.566,0.56,0.0],[0.565,0.58,0.0],[0.564,0.59,0.0],[0.563,0.595,0.0],[0.563,0.597,0.0],[0.563,0.598,0.0],[0.563,0.597,0.0],[0.563,0.596,0.0],[0.564,0.593,0.0],[0.564,0.588,0.0],[0.566,0.579,0.0],[0.567,0.567,0.0],[0.569,0.551,0.0],[0.57,0.532,0.0],[0.572,0.511,0.0],[0.573,0.487,0.0],[0.574,0.464,0.0],[0.575,0.442,0.0],[0.575,0.423,0.0],[0.575,0.407,0.0],[0.575,0.395,0.0],[0.575,0.386,0.0],[0.575,0.38,0.0],[0.575,0.377,0.0],[0.575,0.375,0.0],[0.575,0.375,0.0]],"lightbar":[[0.416,0.61,0.0],[0.416,0.61,0.0],[0.417,0.61,0.0],[0.418,0.61,0.0],[0.419,0.61,0.0],[0.421,0.61,0.0],[0.424,0.609,0.0],[0.429,0.609,0.0],[0.434,0.609,0.0],[0.44,0.608,0.0],[0.446,0.608,0.0],[0.454,0.609,0.0],[0.461,0.609,0.0],[0.469,0.61,0.0],[0.477,0.611,0.0],[0.484,0.612,0.0],[0.49,0.613,0.0],[0.496,0.614,0.0],[0.5,0.614,0.0],[0.504,0.615,0.0],[0.506,0.615,0.0],[0.507,0.615,0.0],[0.507,0.615,0.0],[0.507,0.616,0.0],[0.508,0.615,0.0],[0.508,0.615,0.0],[0.509,0.615,0.0],[0.511,0.615,0.0],[0.514,0.615,0.0],[0.518,0.614,0.0],[0.524,0.613,0.0],[0.53,0.613,0.0],[0.537,0.612,0.0],[0.545,0.612,0.0],[0.553,0.611,0.0],[0.561,0.611,0.0],[0.569,0.612,0.0],[0.577,0.612,0.0],[0.584,0.613,0.0],[0.591,0.615,0.0],[0.596,0.617,0.0],[0.6,0.619,0.0],[0.604,0.621,0.0],[0.606,0.623,0.0],[0.608,0.625,0.0],[0.609,0.626,0.0],[0.61,0.628,0.0],[0.61,0.629,0.0],[0.61,0.63,0.0],[0.61,0.63,0.0],[0.61,0.631,0.0],[0.61,0.631,0.0],[0.61,0.631,0.0],[0.61,0.631,0.0],[0.61,0.631,0.0],[0.61,0.631,0.0],[0.611,0.632,0.0],[0.611,0.633,0.0],[0.61,0.634,0.19],[0.609,0.635,0.48],[0.608,0.636,0.8],[0.605,0.636,1.0],[0.6,0.636,1.0],[0.594,0.634,1.0],[0.586,0.632,1.0],[0.577,0.628,1.0],[0.567,0.624,1.0],[0.557,0.618,1.0],[0.546,0.611,1.0],[0.536,0.603,1.0],[0.526,0.594,1.0],[0.518,0.584,1.0],[0.512,0.574,1.0],[0.506,0.564,1.0],[0.503,0.554,1.0],[0.501,0.544,1.0],[0.5,0.533,1.0],[0.5,0.523,1.0],[0.5,0.512,1.0],[0.499,0.501,1.0],[0.497,0.489,1.0],[0.494,0.475,1.0],[0.488,0.46,1.0],[0.48,0.442,1.0],[0.47,0.423,1.0],[0.458,0.403,1.0],[0.445,0.384,1.0],[0.431,0.366,1.0],[0.417,0.353,1.0],[0.404,0.345,1.0],[0.393,0.344,1.0],[0.384,0.351,0.89],[0.378,0.364,0.37],[0.374,0.383,0.0],[0.372,0.405,0.0],[0.373,0.428,0.0],[0.374,0.451,0.0],[0.377,0.471,0.0],[0.379,0.487,0.0],[0.381,0.5,0.0],[0.382,0.508,0.0],[0.383,0.513,0.0],[0.384,0.515,0.0],[0.384,0.515,0.0],[0.384,0.515,0.0],[0.384,0.515,0.0],[0.384,0.515,0.0],[0.384,0.517,0.0],[0.385,0.523,0.0],[0.386,0.535,0.0],[0.388,0.554,0.0],[0.391,0.58,0.0],[0.395,0.61,0.0],[0.399,0.636,0.0],[0.404,0.654,0.0],[0.408,0.659,0.0],[0.413,0.652,0.0],[0.417,0.635,0.0],[0.421,0.614,0.0],[0.423,0.593,0.0],[0.425,0.576,0.0],[0.426,0.566,0.0],[0.426,0.562,0.0],[0.426,0.561,0.0],[0.426,0.561,0.0],[0.426,0.563,0.0],[0.426,0.568,0.0],[0.426,0.575,0.0],[0.426,0.585,0.0],[0.427,0.596,0.0],[0.427,0.608,0.0],[0.427,0.619,0.0],[0.427,0.629,0.0],[0.427,0.636,0.0],[0.427,0.641,0.0],[0.427,0.643,0.0],[0.427,0.643,0.0],[0.427,0.642,0.0],[0.427,0.64,0.0],[0.427,0.638,0.0],[0.427,0.637,0.0],[0.427,0.636,0.0],[0.427,0.635,0.0],[0.427,0.635,0.0]],"privacy":[[0.413,0.275,0.0],[0.413,0.275,0.0],[0.414,0.275,0.0],[0.414,0.275,0.0],[0.416,0.275,0.0],[0.418,0.274,0.0],[0.422,0.274,0.0],[0.426,0.274,0.0],[0.431,0.274,0.0],[0.437,0.273,0.0],[0.444,0.273,0.0],[0.452,0.274,0.0],[0.46,0.274,0.0],[0.468,0.274,0.0],[0.476,0.274,0.0],[0.483,0.275,0.0],[0.49,0.275,0.0],[0.496,0.276,0.0],[0.5,0.276,0.0],[0.504,0.276,0.0],[0.506,0.276,0.0],[0.507,0.276,0.0],[0.508,0.276,0.0],[0.508,0.276,0.0],[0.508,0.276,0.0],[0.508,0.276,0.0],[0.509,0.276,0.0],[0.512,0.276,0.0],[0.515,0.276,0.0],[0.519,0.275,0.0],[0.524,0.275,0.0],[0.531,0.275,0.0],[0.538,0.274,0.0],[0.546,0.273,0.0],[0.555,0.273,0.0],[0.563,0.273,0.0],[0.572,0.273,0.0],[0.58,0.273,0.0],[0.587,0.273,0.0],[0.594,0.274,0.0],[0.6,0.275,0.0],[0.604,0.276,0.0],[0.608,0.277,0.0],[0.611,0.278,0.0],[0.612,0.279,0.0],[0.614,0.281,0.0],[0.614,0.282,0.0],[0.615,0.282,0.0],[0.615,0.283,0.0],[0.615,0.283,0.0],[0.615,0.283,0.0],[0.615,0.284,0.0],[0.615,0.284,0.0],[0.615,0.284,0.0],[0.615,0.283,0.0],[0.615,0.283,0.0],[0.615,0.283,0.0],[0.615,0.282,0.0],[0.615,0.281,0.19],[0.614,0.28,0.48],[0.612,0.278,0.81],[0.609,0.275,1.0],[0.604,0.271,1.0],[0.598,0.266,1.0],[0.59,0.26,1.0],[0.581,0.253,1.0],[0.57,0.245,1.0],[0.559,0.236,1.0],[0.548,0.227,1.0],[0.537,0.216,1.0],[0.527,0.206,1.0],[0.519,0.195,1.0],[0.512,0.185,1.0],[0.507,0.174,1.0],[0.503,0.163,1.0],[0.501,0.152,1.0],[0.5,0.142,1.0],[0.5,0.131,1.0],[0.5,0.12,1.0],[0.499,0.109,1.0],[0.497,0.096,1.0],[0.493,0.082,1.0],[0.488,0.066,1.0],[0.48,0.048,1.0],[0.47,0.031,1.0],[0.458,0.014,1.0],[0.445,0.001,1.0],[0.432,-0.008,1.0],[0.419,-0.009,1.0],[0.407,-0.001,1.0],[0.397,0.016,1.0],[0.389,0.042,0.8],[0.384,0.076,0.32],[0.382,0.114,0.0],[0.381,0.154,0.0],[0.382,0.194,0.0],[0.384,0.231,0.0],[0.387,0.263,0.0],[0.389,0.289,0.0],[0.391,0.309,0.0],[0.392,0.322,0.0],[0.393,0.329,0.0],[0.394,0.332,0.0],[0.394,0.333,0.0],[0.394,0.332,0.0],[0.394,0.326,0.0],[0.394,0.314,0.0],[0.394,0.295,0.0],[0.394,0.27,0.0],[0.394,0.245,0.0],[0.394,0.224,0.0],[0.394,0.214,0.0],[0.395,0.216,0.0],[0.397,0.231,0.0],[0.399,0.254,0.0],[0.402,0.282,0.0],[0.405,0.306,0.0],[0.408,0.326,0.0],[0.411,0.338,0.0],[0.413,0.345,0.0],[0.414,0.349,0.0],[0.415,0.35,0.0],[0.416,0.35,0.0],[0.416,0.35,0.0],[0.416,0.35,0.0],[0.416,0.35,0.0],[0.416,0.35,0.0],[0.416,0.35,0.0],[0.417,0.349,0.0],[0.417,0.348,0.0],[0.418,0.345,0.0],[0.419,0.341,0.0],[0.419,0.336,0.0],[0.42,0.331,0.0],[0.421,0.325,0.0],[0.422,0.319,0.0],[0.422,0.314,0.0],[0.423,0.31,0.0],[0.423,0.307,0.0],[0.424,0.305,0.0],[0.424,0.304,0.0],[0.424,0.303,0.0],[0.424,0.303,0.0],[0.424,0.303,0.0]],"spk_l":[[0.45,0.829,0.0],[0.45,0.829,0.0],[0.45,0.829,0.0],[0.45,0.829,0.0],[0.452,0.829,0.0],[0.453,0.829,0.0],[0.455,0.829,0.0],[0.458,0.829,0.0],[0.462,0.83,0.0],[0.466,0.83,0.0],[0.471,0.831,0.0],[0.476,0.832,0.0],[0.481,0.834,0.0],[0.487,0.835,0.0],[0.492,0.837,0.0],[0.497,0.838,0.0],[0.501,0.84,0.0],[0.505,0.841,0.0],[0.508,0.842,0.0],[0.51,0.843,0.0],[0.511,0.844,0.0],[0.512,0.844,0.0],[0.513,0.844,0.0],[0.513,0.844,0.0],[0.513,0.844,0.0],[0.513,0.844,0.0],[0.514,0.844,0.0],[0.515,0.843,0.0],[0.517,0.843,0.0],[0.52,0.842,0.0],[0.523,0.842,0.0],[0.527,0.841,0.0],[0.532,0.84,0.0],[0.537,0.84,0.0],[0.542,0.84,0.0],[0.547,0.839,0.0],[0.552,0.839,0.0],[0.557,0.84,0.0],[0.561,0.84,0.0],[0.564,0.841,0.0],[0.567,0.843,0.0],[0.569,0.844,0.0],[0.571,0.845,0.0],[0.572,0.847,0.0],[0.572,0.848,0.0],[0.572,0.849,0.0],[0.572,0.85,0.0],[0.572,0.851,0.0],[0.572,0.851,0.0],[0.572,0.852,0.0],[0.572,0.852,0.0],[0.572,0.852,0.0],[0.572,0.852,0.0],[0.572,0.852,0.0],[0.572,0.852,0.0],[0.572,0.853,0.0],[0.572,0.853,0.0],[0.571,0.855,0.0],[0.571,0.856,0.0],[0.569,0.857,0.0],[0.567,0.858,0.0],[0.565,0.859,0.0],[0.561,0.859,0.0],[0.556,0.859,0.0],[0.55,0.858,0.0],[0.544,0.855,0.0],[0.536,0.852,0.0],[0.529,0.847,0.0],[0.522,0.841,0.0],[0.515,0.834,0.0],[0.509,0.826,0.0],[0.503,0.818,0.0],[0.499,0.809,0.0],[0.496,0.8,0.0],[0.494,0.79,0.0],[0.492,0.78,0.0],[0.492,0.77,0.0],[0.492,0.76,0.0],[0.492,0.75,0.0],[0.491,0.74,0.0],[0.49,0.73,0.0],[0.487,0.719,0.0],[0.484,0.707,0.0],[0.479,0.694,0.0],[0.472,0.68,0.0],[0.465,0.665,0.04],[0.456,0.65,0.31],[0.447,0.635,0.6],[0.438,0.622,0.91],[0.43,0.611,1.0],[0.423,0.603,1.0],[0.417,0.599,1.0],[0.413,0.599,1.0],[0.411,0.602,1.0],[0.411,0.607,1.0],[0.411,0.614,1.0],[0.413,0.621,1.0],[0.415,0.627,1.0],[0.417,0.632,1.0],[0.419,0.636,1.0],[0.42,0.639,1.0],[0.421,0.641,1.0],[0.421,0.641,1.0],[0.421,0.641,1.0],[0.421,0.642,1.0],[0.421,0.646,1.0],[0.421,0.656,1.0],[0.422,0.673,1.0],[0.423,0.7,1.0],[0.425,0.738,1.0],[0.427,0.783,1.0],[0.43,0.831,0.89],[0.434,0.874,0.11],[0.438,0.903,0.0],[0.442,0.913,0.0],[0.447,0.903,0.0],[0.45,0.875,0.0],[0.453,0.837,0.0],[0.456,0.797,0.0],[0.458,0.761,0.0],[0.459,0.735,0.0],[0.46,0.718,0.0],[0.46,0.712,0.0],[0.46,0.711,0.0],[0.46,0.711,0.0],[0.46,0.714,0.0],[0.46,0.72,0.0],[0.46,0.731,0.0],[0.46,0.746,0.0],[0.461,0.763,0.0],[0.461,0.783,0.0],[0.461,0.802,0.0],[0.461,0.82,0.0],[0.461,0.834,0.0],[0.462,0.845,0.0],[0.462,0.851,0.0],[0.461,0.855,0.0],[0.461,0.856,0.0],[0.461,0.855,0.0],[0.461,0.854,0.0],[0.461,0.852,0.0],[0.461,0.852,0.0],[0.461,0.851,0.0],[0.461,0.851,0.0]],"usb":[[0.495,0.836,0.0],[0.495,0.836,0.0],[0.495,0.836,0.0],[0.495,0.836,0.0],[0.495,0.836,0.0],[0.495,0.837,0.0],[0.494,0.837,0.0],[0.494,0.838,0.0],[0.494,0.839,0.0],[0.493,0.84,0.0],[0.493,0.841,0.0],[0.493,0.842,0.0],[0.492,0.843,0.0],[0.492,0.844,0.0],[0.492,0.845,0.0],[0.492,0.846,0.0],[0.492,0.847,0.0],[0.492,0.848,0.0],[0.492,0.848,0.0],[0.492,0.849,0.0],[0.492,0.849,0.0],[0.492,0.849,0.0],[0.492,0.849,0.0],[0.492,0.849,0.0],[0.492,0.849,0.0],[0.492,0.849,0.0],[0.492,0.849,0.0],[0.492,0.849,0.0],[0.492,0.848,0.0],[0.492,0.848,0.0],[0.492,0.847,0.0],[0.492,0.846,0.0],[0.492,0.845,0.0],[0.493,0.844,0.0],[0.493,0.842,0.0],[0.493,0.841,0.0],[0.494,0.839,0.0],[0.494,0.838,0.0],[0.495,0.836,0.0],[0.496,0.835,0.0],[0.496,0.833,0.0],[0.497,0.832,0.0],[0.498,0.831,0.0],[0.498,0.829,0.0],[0.499,0.829,0.0],[0.499,0.828,0.0],[0.499,0.827,0.0],[0.5,0.827,0.0],[0.5,0.826,0.0],[0.5,0.826,0.0],[0.5,0.826,0.0],[0.5,0.826,0.0],[0.5,0.826,0.0],[0.5,0.826,0.0],[0.5,0.826,0.0],[0.5,0.826,0.0],[0.5,0.825,0.0],[0.501,0.825,0.0],[0.501,0.824,0.0],[0.502,0.823,0.0],[0.502,0.822,0.0],[0.503,0.82,0.0],[0.504,0.818,0.0],[0.505,0.816,0.0],[0.505,0.812,0.0],[0.506,0.809,0.0],[0.507,0.805,0.0],[0.507,0.8,0.0],[0.508,0.794,0.0],[0.508,0.788,0.0],[0.508,0.781,0.0],[0.508,0.774,0.0],[0.508,0.766,0.0],[0.508,0.757,0.0],[0.508,0.748,0.0],[0.508,0.739,0.0],[0.508,0.73,0.0],[0.508,0.72,0.0],[0.508,0.711,0.0],[0.508,0.701,0.0],[0.508,0.692,0.0],[0.508,0.684,0.0],[0.508,0.676,0.0],[0.508,0.668,0.0],[0.508,0.66,0.0],[0.508,0.652,0.06],[0.508,0.644,0.31],[0.507,0.636,0.6],[0.507,0.627,0.9],[0.506,0.617,1.0],[0.505,0.607,1.0],[0.504,0.597,1.0],[0.503,0.587,1.0],[0.501,0.577,1.0],[0.5,0.569,1.0],[0.499,0.561,1.0],[0.498,0.555,1.0],[0.497,0.549,1.0],[0.496,0.545,1.0],[0.496,0.543,1.0],[0.496,0.541,1.0],[0.495,0.54,1.0],[0.495,0.539,1.0],[0.495,0.539,1.0],[0.495,0.54,1.0],[0.495,0.544,1.0],[0.495,0.554,1.0],[0.495,0.574,1.0],[0.495,0.605,1.0],[0.495,0.65,1.0],[0.494,0.708,1.0],[0.494,0.774,0.96],[0.494,0.841,0.16],[0.494,0.896,0.0],[0.494,0.932,0.0],[0.494,0.944,0.0],[0.494,0.934,0.0],[0.494,0.91,0.0],[0.494,0.88,0.0],[0.494,0.85,0.0],[0.494,0.827,0.0],[0.494,0.813,0.0],[0.494,0.807,0.0],[0.494,0.806,0.0],[0.494,0.806,0.0],[0.494,0.809,0.0],[0.494,0.814,0.0],[0.495,0.822,0.0],[0.496,0.833,0.0],[0.497,0.847,0.0],[0.499,0.86,0.0],[0.5,0.872,0.0],[0.502,0.881,0.0],[0.504,0.887,0.0],[0.505,0.888,0.0],[0.506,0.887,0.0],[0.508,0.882,0.0],[0.508,0.876,0.0],[0.509,0.869,0.0],[0.51,0.864,0.0],[0.51,0.859,0.0],[0.51,0.857,0.0],[0.51,0.856,0.0],[0.51,0.856,0.0]],"spk_r":[[0.563,0.869,0.0],[0.563,0.869,0.0],[0.563,0.869,0.0],[0.562,0.87,0.0],[0.561,0.871,0.0],[0.56,0.872,0.0],[0.558,0.874,0.0],[0.556,0.876,0.0],[0.553,0.878,0.0],[0.55,0.881,0.0],[0.545,0.883,0.0],[0.541,0.885,0.0],[0.535,0.888,0.0],[0.53,0.889,0.0],[0.525,0.891,0.0],[0.52,0.892,0.0],[0.515,0.893,0.0],[0.511,0.894,0.0],[0.508,0.895,0.0],[0.506,0.895,0.0],[0.504,0.895,0.0],[0.503,0.896,0.0],[0.503,0.896,0.0],[0.503,0.896,0.0],[0.503,0.896,0.0],[0.502,0.896,0.0],[0.502,0.895,0.0],[0.5,0.895,0.0],[0.498,0.895,0.0],[0.495,0.895,0.0],[0.491,0.895,0.0],[0.486,0.894,0.0],[0.481,0.893,0.0],[0.475,0.892,0.0],[0.469,0.891,0.0],[0.463,0.889,0.0],[0.457,0.886,0.0],[0.451,0.884,0.0],[0.446,0.88,0.0],[0.441,0.877,0.0],[0.438,0.874,0.0],[0.435,0.87,0.0],[0.432,0.867,0.0],[0.431,0.863,0.0],[0.43,0.86,0.0],[0.429,0.858,0.0],[0.428,0.856,0.0],[0.428,0.854,0.0],[0.428,0.853,0.0],[0.428,0.852,0.0],[0.428,0.852,0.0],[0.428,0.852,0.0],[0.428,0.852,0.0],[0.428,0.852,0.0],[0.428,0.851,0.0],[0.428,0.85,0.0],[0.428,0.849,0.0],[0.428,0.847,0.0],[0.428,0.844,0.0],[0.428,0.84,0.0],[0.43,0.836,0.0],[0.431,0.832,0.0],[0.434,0.827,0.0],[0.438,0.821,0.0],[0.442,0.816,0.0],[0.448,0.81,0.0],[0.454,0.804,0.0],[0.46,0.798,0.0],[0.466,0.791,0.0],[0.472,0.785,0.0],[0.477,0.778,0.0],[0.482,0.771,0.0],[0.486,0.763,0.0],[0.488,0.755,0.0],[0.49,0.747,0.0],[0.492,0.738,0.0],[0.492,0.729,0.0],[0.492,0.72,0.0],[0.492,0.711,0.0],[0.493,0.703,0.0],[0.494,0.695,0.0],[0.496,0.689,0.0],[0.499,0.684,0.0],[0.504,0.682,0.0],[0.51,0.68,0.0],[0.517,0.68,0.02],[0.526,0.681,0.27],[0.535,0.681,0.54],[0.545,0.681,0.83],[0.555,0.678,1.0],[0.564,0.671,1.0],[0.573,0.661,1.0],[0.58,0.647,1.0],[0.585,0.63,1.0],[0.589,0.611,1.0],[0.591,0.591,1.0],[0.592,0.572,1.0],[0.592,0.554,1.0],[0.592,0.54,1.0],[0.591,0.529,1.0],[0.59,0.522,1.0],[0.59,0.518,1.0],[0.59,0.517,1.0],[0.59,0.516,1.0],[0.59,0.517,1.0],[0.59,0.522,1.0],[0.59,0.533,1.0],[0.59,0.553,1.0],[0.589,0.587,1.0],[0.589,0.637,1.0],[0.587,0.702,1.0],[0.585,0.779,0.96],[0.582,0.859,0.13],[0.578,0.929,0.0],[0.574,0.978,0.0],[0.569,1.002,0.0],[0.565,1.002,0.0],[0.561,0.984,0.0],[0.558,0.958,0.0],[0.556,0.931,0.0],[0.555,0.909,0.0],[0.554,0.895,0.0],[0.554,0.89,0.0],[0.554,0.889,0.0],[0.554,0.889,0.0],[0.554,0.891,0.0],[0.554,0.895,0.0],[0.556,0.902,0.0],[0.557,0.912,0.0],[0.559,0.922,0.0],[0.561,0.932,0.0],[0.564,0.94,0.0],[0.567,0.944,0.0],[0.569,0.945,0.0],[0.572,0.941,0.0],[0.574,0.934,0.0],[0.575,0.925,0.0],[0.577,0.914,0.0],[0.578,0.905,0.0],[0.579,0.897,0.0],[0.579,0.891,0.0],[0.579,0.887,0.0],[0.579,0.886,0.0],[0.579,0.886,0.0]],"magnet_r":[[0.535,0.875,0.0],[0.535,0.875,0.0],[0.535,0.875,0.0],[0.535,0.875,0.0],[0.534,0.876,0.0],[0.533,0.877,0.0],[0.531,0.878,0.0],[0.529,0.88,0.0],[0.526,0.881,0.0],[0.523,0.883,0.0],[0.519,0.885,0.0],[0.516,0.886,0.0],[0.512,0.888,0.0],[0.507,0.889,0.0],[0.503,0.89,0.0],[0.5,0.891,0.0],[0.496,0.892,0.0],[0.494,0.892,0.0],[0.491,0.893,0.0],[0.49,0.893,0.0],[0.489,0.893,0.0],[0.488,0.893,0.0],[0.488,0.893,0.0],[0.488,0.893,0.0],[0.488,0.893,0.0],[0.487,0.893,0.0],[0.487,0.893,0.0],[0.486,0.893,0.0],[0.484,0.893,0.0],[0.482,0.892,0.0],[0.48,0.891,0.0],[0.477,0.89,0.0],[0.474,0.889,0.0],[0.47,0.887,0.0],[0.467,0.886,0.0],[0.463,0.883,0.0],[0.46,0.881,0.0],[0.457,0.878,0.0],[0.454,0.875,0.0],[0.452,0.872,0.0],[0.451,0.869,0.0],[0.45,0.865,0.0],[0.449,0.862,0.0],[0.449,0.859,0.0],[0.449,0.857,0.0],[0.449,0.855,0.0],[0.45,0.853,0.0],[0.45,0.852,0.0],[0.45,0.851,0.0],[0.45,0.85,0.0],[0.45,0.85,0.0],[0.45,0.85,0.0],[0.45,0.85,0.0],[0.45,0.85,0.0],[0.45,0.849,0.0],[0.451,0.849,0.0],[0.451,0.848,0.0],[0.451,0.846,0.0],[0.452,0.844,0.0],[0.454,0.842,0.0],[0.455,0.839,0.0],[0.458,0.835,0.0],[0.461,0.831,0.0],[0.464,0.827,0.0],[0.469,0.823,0.0],[0.473,0.818,0.0],[0.478,0.814,0.0],[0.483,0.808,0.0],[0.488,0.803,0.0],[0.493,0.797,0.0],[0.497,0.79,0.0],[0.5,0.783,0.0],[0.503,0.776,0.0],[0.505,0.768,0.0],[0.507,0.759,0.0],[0.508,0.75,0.0],[0.508,0.742,0.0],[0.508,0.732,0.0],[0.508,0.723,0.0],[0.508,0.714,0.0],[0.509,0.706,0.0],[0.511,0.7,0.0],[0.513,0.694,0.0],[0.516,0.69,0.0],[0.52,0.687,0.0],[0.525,0.684,0.01],[0.531,0.682,0.26],[0.537,0.679,0.54],[0.543,0.674,0.84],[0.549,0.667,1.0],[0.554,0.657,1.0],[0.558,0.644,1.0],[0.561,0.628,1.0],[0.563,0.611,1.0],[0.563,0.592,1.0],[0.562,0.574,1.0],[0.561,0.557,1.0],[0.56,0.543,1.0],[0.558,0.531,1.0],[0.557,0.522,1.0],[0.556,0.516,1.0],[0.556,0.513,1.0],[0.555,0.512,1.0],[0.555,0.512,1.0],[0.555,0.512,1.0],[0.555,0.517,1.0],[0.555,0.529,1.0],[0.555,0.551,1.0],[0.554,0.587,1.0],[0.553,0.639,1.0],[0.552,0.708,1.0],[0.55,0.787,0.95],[0.547,0.867,0.12],[0.544,0.936,0.0],[0.541,0.984,0.0],[0.538,1.005,0.0],[0.535,1.002,0.0],[0.532,0.981,0.0],[0.53,0.953,0.0],[0.529,0.924,0.0],[0.528,0.902,0.0],[0.527,0.887,0.0],[0.527,0.881,0.0],[0.527,0.881,0.0],[0.527,0.881,0.0],[0.527,0.883,0.0],[0.528,0.888,0.0],[0.529,0.895,0.0],[0.53,0.906,0.0],[0.532,0.917,0.0],[0.534,0.928,0.0],[0.537,0.938,0.0],[0.539,0.944,0.0],[0.542,0.946,0.0],[0.544,0.944,0.0],[0.546,0.938,0.0],[0.548,0.93,0.0],[0.55,0.92,0.0],[0.551,0.911,0.0],[0.551,0.903,0.0],[0.552,0.897,0.0],[0.552,0.894,0.0],[0.552,0.892,0.0],[0.552,0.892,0.0]],"cover":[[0.443,0.146,0.0],[0.443,0.146,0.0],[0.444,0.146,0.0],[0.444,0.146,0.0],[0.445,0.146,0.0],[0.447,0.146,0.0],[0.449,0.145,0.0],[0.451,0.145,0.0],[0.455,0.145,0.0],[0.458,0.144,0.0],[0.463,0.144,0.0],[0.468,0.144,0.0],[0.473,0.144,0.0],[0.478,0.143,0.0],[0.483,0.143,0.0],[0.488,0.143,0.0],[0.492,0.143,0.0],[0.496,0.143,0.0],[0.499,0.143,0.0],[0.501,0.143,0.0],[0.502,0.143,0.0],[0.503,0.143,0.0],[0.503,0.143,0.0],[0.503,0.143,0.0],[0.503,0.143,0.0],[0.504,0.143,0.0],[0.504,0.143,0.0],[0.506,0.143,0.0],[0.508,0.143,0.0],[0.511,0.143,0.0],[0.514,0.142,0.0],[0.518,0.142,0.0],[0.523,0.142,0.0],[0.528,0.142,0.0],[0.534,0.142,0.0],[0.539,0.142,0.0],[0.545,0.142,0.0],[0.55,0.142,0.0],[0.555,0.142,0.0],[0.559,0.142,0.0],[0.563,0.143,0.0],[0.566,0.143,0.0],[0.568,0.144,0.0],[0.57,0.145,0.0],[0.571,0.146,0.0],[0.572,0.146,0.0],[0.572,0.147,0.0],[0.572,0.147,0.01],[0.573,0.148,0.02],[0.573,0.148,0.02],[0.573,0.148,0.02],[0.573,0.148,0.02],[0.573,0.148,0.02],[0.573,0.148,0.02],[0.573,0.148,0.02],[0.573,0.147,0.02],[0.573,0.146,0.01],[0.573,0.145,0.0],[0.573,0.143,0.0],[0.572,0.141,0.0],[0.571,0.138,0.0],[0.569,0.133,0.0],[0.566,0.129,0.0],[0.562,0.123,0.0],[0.557,0.116,0.0],[0.551,0.108,0.0],[0.544,0.1,0.0],[0.538,0.091,0.0],[0.531,0.082,0.0],[0.524,0.072,0.0],[0.518,0.062,0.0],[0.513,0.052,0.0],[0.509,0.041,0.0],[0.506,0.031,0.0],[0.504,0.02,0.0],[0.502,0.01,0.0],[0.502,-0.0,0.0],[0.502,-0.011,0.0],[0.502,-0.021,0.0],[0.501,-0.032,0.0],[0.5,-0.044,0.0],[0.498,-0.056,0.0],[0.494,-0.069,0.0],[0.489,-0.083,0.0],[0.483,-0.095,0.0],[0.476,-0.105,0.0],[0.468,-0.112,0.0],[0.46,-0.113,0.0],[0.452,-0.107,0.0],[0.445,-0.093,0.0],[0.438,-0.072,0.0],[0.433,-0.043,0.0],[0.43,-0.009,0.0],[0.428,0.029,0.0],[0.428,0.069,0.0],[0.428,0.107,0.0],[0.429,0.143,0.0],[0.431,0.173,0.0],[0.432,0.199,0.0],[0.433,0.217,0.0],[0.434,0.23,0.0],[0.435,0.237,0.0],[0.435,0.24,0.0],[0.435,0.24,0.0],[0.435,0.239,0.0],[0.435,0.232,0.0],[0.435,0.215,0.0],[0.434,0.188,0.0],[0.434,0.153,0.0],[0.434,0.115,0.0],[0.433,0.081,0.0],[0.433,0.059,0.0],[0.433,0.053,0.0],[0.433,0.069,0.0],[0.433,0.101,0.0],[0.435,0.145,0.77],[0.436,0.191,1.0],[0.438,0.233,1.0],[0.439,0.266,1.0],[0.441,0.29,1.0],[0.442,0.305,1.0],[0.442,0.314,1.0],[0.443,0.317,1.0],[0.443,0.317,1.0],[0.443,0.317,1.0],[0.443,0.316,1.0],[0.443,0.313,1.0],[0.444,0.307,1.0],[0.444,0.3,1.0],[0.445,0.289,1.0],[0.447,0.276,1.0],[0.448,0.262,1.0],[0.449,0.246,1.0],[0.45,0.231,1.0],[0.452,0.216,1.0],[0.453,0.204,1.0],[0.454,0.194,0.7],[0.455,0.187,0.44],[0.455,0.182,0.23],[0.456,0.179,0.06],[0.456,0.177,0.0],[0.456,0.176,0.0],[0.456,0.176,0.0],[0.456,0.175,0.0]],"trigger":[[0.445,0.174,0.0],[0.445,0.174,0.0],[0.445,0.174,0.0],[0.445,0.174,0.0],[0.446,0.174,0.0],[0.448,0.174,0.0],[0.45,0.173,0.0],[0.453,0.173,0.0],[0.456,0.173,0.0],[0.46,0.172,0.0],[0.464,0.172,0.0],[0.469,0.172,0.0],[0.474,0.172,0.0],[0.479,0.172,0.0],[0.485,0.172,0.0],[0.489,0.171,0.0],[0.494,0.171,0.0],[0.497,0.171,0.0],[0.5,0.171,0.0],[0.502,0.171,0.0],[0.504,0.171,0.0],[0.505,0.171,0.0],[0.505,0.171,0.0],[0.505,0.171,0.0],[0.505,0.171,0.0],[0.505,0.171,0.0],[0.506,0.171,0.0],[0.507,0.171,0.0],[0.509,0.171,0.0],[0.512,0.171,0.0],[0.516,0.171,0.0],[0.52,0.171,0.0],[0.525,0.17,0.0],[0.53,0.17,0.0],[0.535,0.17,0.0],[0.541,0.17,0.0],[0.546,0.17,0.0],[0.551,0.17,0.0],[0.556,0.17,0.0],[0.56,0.171,0.0],[0.564,0.171,0.0],[0.566,0.172,0.0],[0.569,0.173,0.0],[0.57,0.174,0.0],[0.571,0.174,0.01],[0.572,0.175,0.03],[0.572,0.176,0.04],[0.572,0.176,0.05],[0.573,0.177,0.06],[0.573,0.177,0.06],[0.573,0.177,0.06],[0.573,0.177,0.06],[0.573,0.177,0.06],[0.573,0.177,0.06],[0.573,0.177,0.06],[0.573,0.176,0.05],[0.573,0.176,0.04],[0.573,0.174,0.03],[0.572,0.173,0.01],[0.572,0.17,0.0],[0.57,0.167,0.0],[0.568,0.163,0.0],[0.565,0.158,0.0],[0.561,0.153,0.0],[0.556,0.146,0.0],[0.55,0.139,0.0],[0.543,0.131,0.0],[0.536,0.122,0.0],[0.529,0.113,0.0],[0.523,0.103,0.0],[0.517,0.093,0.0],[0.511,0.083,0.0],[0.507,0.072,0.0],[0.504,0.062,0.0],[0.502,0.051,0.0],[0.501,0.041,0.0],[0.5,0.031,0.0],[0.5,0.02,0.0],[0.5,0.01,0.0],[0.499,-0.001,0.0],[0.498,-0.013,0.0],[0.496,-0.025,0.0],[0.492,-0.038,0.0],[0.488,-0.052,0.0],[0.482,-0.065,0.0],[0.474,-0.075,0.0],[0.467,-0.082,0.0],[0.459,-0.084,0.0],[0.451,-0.079,0.0],[0.443,-0.067,0.0],[0.437,-0.047,0.0],[0.432,-0.019,0.0],[0.429,0.014,0.0],[0.428,0.05,0.0],[0.427,0.088,0.0],[0.428,0.126,0.0],[0.429,0.16,0.0],[0.431,0.19,0.0],[0.432,0.214,0.0],[0.433,0.233,0.0],[0.434,0.245,0.0],[0.435,0.252,0.0],[0.435,0.254,0.0],[0.435,0.255,0.0],[0.435,0.254,0.0],[0.435,0.247,0.0],[0.435,0.231,0.0],[0.435,0.206,0.0],[0.434,0.173,0.0],[0.434,0.138,0.0],[0.434,0.107,0.0],[0.434,0.087,0.0],[0.434,0.085,0.0],[0.434,0.102,0.0],[0.435,0.135,0.03],[0.436,0.177,0.81],[0.438,0.221,1.0],[0.44,0.26,1.0],[0.441,0.291,1.0],[0.443,0.312,1.0],[0.444,0.325,1.0],[0.444,0.332,1.0],[0.445,0.335,1.0],[0.445,0.335,1.0],[0.445,0.335,1.0],[0.445,0.334,1.0],[0.445,0.332,1.0],[0.446,0.327,1.0],[0.446,0.32,1.0],[0.447,0.311,1.0],[0.448,0.299,1.0],[0.45,0.286,1.0],[0.451,0.272,1.0],[0.452,0.257,1.0],[0.453,0.244,1.0],[0.454,0.232,1.0],[0.455,0.222,0.74],[0.456,0.215,0.48],[0.456,0.21,0.26],[0.457,0.206,0.1],[0.457,0.205,0.0],[0.457,0.204,0.0],[0.457,0.203,0.0],[0.457,0.203,0.0]]},"c03":{"mic":[[0.345,0.453,1.0],[0.345,0.453,1.0],[0.344,0.453,1.0],[0.344,0.453,1.0],[0.344,0.452,1.0],[0.343,0.451,1.0],[0.342,0.449,1.0],[0.341,0.447,1.0],[0.339,0.444,1.0],[0.337,0.441,1.0],[0.334,0.436,1.0],[0.332,0.432,1.0],[0.329,0.427,1.0],[0.325,0.421,1.0],[0.322,0.414,1.0],[0.318,0.407,1.0],[0.314,0.4,1.0],[0.31,0.392,1.0],[0.306,0.385,1.0],[0.302,0.377,1.0],[0.298,0.369,1.0],[0.295,0.361,1.0],[0.291,0.354,1.0],[0.288,0.348,1.0],[0.286,0.342,1.0],[0.284,0.338,1.0],[0.282,0.334,1.0],[0.281,0.331,1.0],[0.28,0.329,1.0],[0.279,0.328,1.0],[0.279,0.328,1.0],[0.279,0.328,1.0]],"slider":[[0.411,0.481,1.0],[0.411,0.481,1.0],[0.411,0.481,1.0],[0.41,0.48,1.0],[0.41,0.479,1.0],[0.41,0.478,1.0],[0.409,0.476,1.0],[0.409,0.473,1.0],[0.408,0.47,1.0],[0.409,0.467,1.0],[0.414,0.465,1.0],[0.421,0.463,1.0],[0.433,0.461,1.0],[0.448,0.46,1.0],[0.466,0.458,1.0],[0.487,0.456,1.0],[0.51,0.453,1.0],[0.533,0.449,1.0],[0.556,0.444,1.0],[0.577,0.438,1.0],[0.595,0.431,1.0],[0.608,0.423,1.0],[0.617,0.415,1.0],[0.623,0.407,1.0],[0.625,0.4,1.0],[0.626,0.393,1.0],[0.628,0.388,1.0],[0.628,0.385,1.0],[0.629,0.382,1.0],[0.629,0.381,1.0],[0.629,0.381,1.0],[0.629,0.381,1.0]],"rec":[[0.406,0.591,1.0],[0.406,0.591,1.0],[0.406,0.591,1.0],[0.406,0.591,1.0],[0.406,0.591,1.0],[0.405,0.59,1.0],[0.405,0.589,1.0],[0.404,0.588,1.0],[0.403,0.587,1.0],[0.401,0.585,1.0],[0.4,0.583,1.0],[0.398,0.58,1.0],[0.396,0.577,1.0],[0.394,0.574,1.0],[0.392,0.571,1.0],[0.389,0.567,1.0],[0.387,0.562,1.0],[0.384,0.558,1.0],[0.381,0.553,1.0],[0.379,0.549,1.0],[0.376,0.544,1.0],[0.373,0.54,1.0],[0.371,0.536,1.0],[0.369,0.532,1.0],[0.367,0.529,1.0],[0.366,0.526,1.0],[0.365,0.524,1.0],[0.364,0.522,1.0],[0.363,0.521,1.0],[0.363,0.52,1.0],[0.363,0.52,1.0],[0.363,0.52,1.0]],"knob":[[0.491,0.669,1.0],[0.491,0.669,1.0],[0.491,0.668,1.0],[0.491,0.668,1.0],[0.491,0.668,1.0],[0.491,0.667,1.0],[0.491,0.665,1.0],[0.491,0.664,1.0],[0.491,0.662,1.0],[0.492,0.659,1.0],[0.492,0.656,1.0],[0.492,0.652,1.0],[0.493,0.648,1.0],[0.493,0.644,1.0],[0.493,0.639,1.0],[0.494,0.634,1.0],[0.494,0.628,1.0],[0.494,0.622,1.0],[0.495,0.616,1.0],[0.495,0.61,1.0],[0.496,0.604,1.0],[0.496,0.599,1.0],[0.496,0.593,1.0],[0.496,0.588,1.0],[0.496,0.584,1.0],[0.497,0.581,1.0],[0.497,0.578,1.0],[0.497,0.576,1.0],[0.497,0.575,1.0],[0.497,0.574,1.0],[0.497,0.573,1.0],[0.497,0.573,1.0]],"ia":[[0.61,0.693,1.0],[0.61,0.693,1.0],[0.61,0.693,1.0],[0.61,0.692,1.0],[0.611,0.692,1.0],[0.611,0.69,1.0],[0.612,0.688,1.0],[0.614,0.686,1.0],[0.615,0.683,1.0],[0.617,0.68,1.0],[0.619,0.675,1.0],[0.621,0.671,1.0],[0.623,0.665,1.0],[0.626,0.659,1.0],[0.629,0.653,1.0],[0.632,0.646,1.0],[0.635,0.639,1.0],[0.638,0.632,1.0],[0.641,0.625,1.0],[0.644,0.617,1.0],[0.647,0.61,1.0],[0.649,0.603,1.0],[0.652,0.597,1.0],[0.654,0.591,1.0],[0.656,0.586,1.0],[0.657,0.582,1.0],[0.658,0.579,1.0],[0.659,0.576,1.0],[0.66,0.575,1.0],[0.66,0.574,1.0],[0.66,0.574,1.0],[0.66,0.574,1.0]]},"c05":{"lightbar":[[0.501,0.5,1.0],[0.501,0.5,1.0],[0.501,0.5,1.0],[0.501,0.5,1.0],[0.501,0.5,1.0],[0.501,0.501,1.0],[0.501,0.502,1.0],[0.501,0.503,1.0],[0.501,0.505,1.0],[0.501,0.507,1.0],[0.501,0.509,1.0],[0.501,0.511,1.0],[0.501,0.513,1.0],[0.501,0.516,1.0],[0.501,0.519,1.0],[0.501,0.521,1.0],[0.501,0.524,1.0],[0.501,0.526,1.0],[0.501,0.529,1.0],[0.501,0.531,1.0],[0.501,0.533,1.0],[0.501,0.534,1.0],[0.501,0.536,1.0],[0.501,0.537,1.0],[0.501,0.538,1.0],[0.501,0.538,1.0],[0.501,0.539,1.0],[0.501,0.539,1.0],[0.501,0.539,1.0],[0.501,0.543,1.0],[0.501,0.574,1.0],[0.501,0.652,1.0],[0.501,0.784,1.0],[0.501,0.963,1.0],[0.501,1.17,1.0],[0.501,1.366,1.0],[0.501,1.502,1.0],[0.501,1.555,1.0],[0.501,1.559,1.0],[0.501,1.559,1.0],[0.501,1.559,1.0],[0.501,1.559,1.0],[0.501,1.559,1.0],[0.501,1.559,1.0],[0.501,1.559,1.0],[0.501,1.559,1.0],[0.501,1.559,1.0],[0.501,1.559,1.0]],"privacy":[[0.499,-0.207,1.0],[0.499,-0.207,1.0],[0.499,-0.207,1.0],[0.499,-0.207,1.0],[0.499,-0.207,1.0],[0.499,-0.207,1.0],[0.499,-0.207,1.0],[0.499,-0.206,1.0],[0.499,-0.206,1.0],[0.499,-0.206,1.0],[0.499,-0.206,1.0],[0.499,-0.206,1.0],[0.499,-0.205,1.0],[0.499,-0.205,1.0],[0.499,-0.205,1.0],[0.499,-0.204,1.0],[0.499,-0.204,1.0],[0.499,-0.204,1.0],[0.499,-0.203,1.0],[0.499,-0.203,1.0],[0.499,-0.203,1.0],[0.499,-0.203,1.0],[0.499,-0.203,1.0],[0.499,-0.202,1.0],[0.499,-0.202,1.0],[0.499,-0.202,1.0],[0.499,-0.202,1.0],[0.499,-0.202,1.0],[0.499,-0.202,1.0],[0.499,-0.2,1.0],[0.499,-0.181,1.0],[0.499,-0.133,1.0],[0.499,-0.052,1.0],[0.499,0.061,1.0],[0.5,0.193,1.0],[0.5,0.319,1.0],[0.5,0.407,1.0],[0.5,0.434,1.0],[0.5,0.423,1.0],[0.5,0.405,1.0],[0.5,0.387,1.0],[0.5,0.373,1.0],[0.5,0.365,1.0],[0.5,0.363,1.0],[0.5,0.363,1.0],[0.5,0.363,1.0],[0.5,0.363,1.0],[0.5,0.363,1.0]]},"c06":{"cover":[[0.471,0.453,1.0],[0.471,0.453,1.0],[0.471,0.453,1.0],[0.471,0.453,1.0],[0.471,0.453,1.0],[0.471,0.453,1.0],[0.471,0.454,1.0],[0.472,0.454,1.0],[0.472,0.454,1.0],[0.473,0.455,1.0],[0.473,0.455,1.0],[0.474,0.455,1.0],[0.475,0.454,1.0],[0.476,0.451,1.0],[0.478,0.445,1.0],[0.481,0.436,1.0],[0.485,0.425,1.0],[0.49,0.411,1.0],[0.496,0.397,1.0],[0.505,0.384,1.0],[0.514,0.371,1.0],[0.523,0.361,1.0],[0.532,0.354,1.0],[0.541,0.349,1.0],[0.548,0.347,1.0],[0.554,0.346,1.0],[0.559,0.345,1.0],[0.562,0.345,1.0],[0.564,0.346,1.0],[0.566,0.346,1.0],[0.568,0.347,1.0],[0.57,0.347,1.0],[0.571,0.348,1.0],[0.572,0.348,1.0],[0.573,0.348,1.0],[0.573,0.348,1.0],[0.574,0.348,1.0],[0.574,0.349,1.0],[0.574,0.349,1.0],[0.574,0.349,1.0]],"trigger":[[0.473,0.502,1.0],[0.473,0.502,1.0],[0.473,0.502,1.0],[0.473,0.502,1.0],[0.473,0.502,1.0],[0.474,0.502,1.0],[0.474,0.502,1.0],[0.474,0.503,1.0],[0.475,0.503,1.0],[0.475,0.504,1.0],[0.476,0.505,1.0],[0.477,0.505,1.0],[0.477,0.506,1.0],[0.478,0.508,1.0],[0.479,0.509,1.0],[0.48,0.51,1.0],[0.482,0.512,1.0],[0.483,0.514,1.0],[0.484,0.516,1.0],[0.485,0.518,1.0],[0.486,0.52,1.0],[0.488,0.522,1.0],[0.489,0.525,1.0],[0.49,0.527,1.0],[0.492,0.53,1.0],[0.493,0.532,1.0],[0.494,0.535,1.0],[0.495,0.537,1.0],[0.496,0.539,1.0],[0.497,0.541,1.0],[0.497,0.543,1.0],[0.498,0.545,1.0],[0.499,0.546,1.0],[0.499,0.548,1.0],[0.499,0.548,1.0],[0.5,0.549,1.0],[0.5,0.549,1.0],[0.5,0.55,1.0],[0.5,0.55,1.0],[0.5,0.55,1.0]]}},"scr":{"c01":[[[0.557,0.46],[0.555,0.434],[0.551,0.409],[0.545,0.387],[0.536,0.367],[0.526,0.351],[0.514,0.339],[0.501,0.332],[0.488,0.329],[0.475,0.332],[0.462,0.339],[0.451,0.351],[0.44,0.367],[0.432,0.386],[0.426,0.408],[0.422,0.431],[0.421,0.456],[0.422,0.481],[0.426,0.505],[0.432,0.527],[0.441,0.546],[0.451,0.563],[0.462,0.575],[0.475,0.583],[0.488,0.586],[0.501,0.584],[0.514,0.578],[0.526,0.566],[0.536,0.551],[0.545,0.531],[0.551,0.509],[0.555,0.485]],[[0.557,0.46],[0.555,0.434],[0.551,0.409],[0.545,0.387],[0.536,0.367],[0.526,0.351],[0.514,0.339],[0.501,0.332],[0.488,0.329],[0.475,0.332],[0.462,0.339],[0.451,0.351],[0.44,0.367],[0.432,0.386],[0.426,0.408],[0.422,0.431],[0.421,0.456],[0.422,0.481],[0.426,0.505],[0.432,0.527],[0.441,0.546],[0.451,0.563],[0.462,0.575],[0.475,0.583],[0.488,0.586],[0.501,0.584],[0.514,0.578],[0.526,0.566],[0.536,0.551],[0.545,0.531],[0.551,0.509],[0.555,0.485]],[[0.557,0.46],[0.555,0.434],[0.551,0.409],[0.545,0.387],[0.536,0.367],[0.526,0.351],[0.514,0.339],[0.501,0.332],[0.488,0.329],[0.475,0.332],[0.462,0.339],[0.451,0.351],[0.44,0.367],[0.432,0.386],[0.426,0.408],[0.422,0.431],[0.421,0.456],[0.422,0.481],[0.426,0.505],[0.432,0.527],[0.441,0.546],[0.451,0.563],[0.462,0.575],[0.475,0.583],[0.488,0.586],[0.501,0.584],[0.514,0.578],[0.526,0.566],[0.536,0.551],[0.545,0.531],[0.551,0.509],[0.555,0.485]],[[0.557,0.46],[0.555,0.434],[0.551,0.409],[0.545,0.387],[0.536,0.367],[0.526,0.351],[0.514,0.339],[0.501,0.332],[0.488,0.329],[0.475,0.332],[0.462,0.339],[0.451,0.351],[0.44,0.367],[0.432,0.386],[0.426,0.408],[0.422,0.431],[0.421,0.456],[0.422,0.481],[0.426,0.505],[0.432,0.527],[0.441,0.546],[0.451,0.563],[0.462,0.575],[0.475,0.583],[0.488,0.586],[0.501,0.584],[0.514,0.578],[0.526,0.566],[0.536,0.551],[0.545,0.531],[0.551,0.509],[0.555,0.485]],[[0.557,0.46],[0.555,0.434],[0.551,0.409],[0.545,0.387],[0.536,0.367],[0.526,0.351],[0.514,0.339],[0.501,0.331],[0.488,0.329],[0.475,0.332],[0.462,0.339],[0.451,0.351],[0.44,0.366],[0.432,0.386],[0.426,0.408],[0.422,0.431],[0.421,0.456],[0.422,0.481],[0.426,0.505],[0.432,0.527],[0.441,0.546],[0.451,0.563],[0.462,0.575],[0.475,0.583],[0.488,0.586],[0.501,0.584],[0.514,0.578],[0.526,0.566],[0.536,0.551],[0.545,0.531],[0.551,0.509],[0.555,0.485]],[[0.557,0.46],[0.555,0.434],[0.551,0.409],[0.545,0.387],[0.536,0.367],[0.526,0.351],[0.514,0.339],[0.501,0.331],[0.488,0.329],[0.475,0.331],[0.462,0.339],[0.45,0.351],[0.44,0.366],[0.432,0.386],[0.426,0.408],[0.422,0.431],[0.421,0.456],[0.422,0.481],[0.426,0.505],[0.432,0.527],[0.441,0.546],[0.451,0.563],[0.462,0.575],[0.475,0.583],[0.488,0.586],[0.501,0.584],[0.514,0.578],[0.526,0.566],[0.536,0.551],[0.545,0.531],[0.551,0.509],[0.555,0.485]],[[0.557,0.46],[0.555,0.434],[0.551,0.409],[0.545,0.387],[0.536,0.367],[0.526,0.351],[0.514,0.339],[0.501,0.331],[0.488,0.329],[0.475,0.331],[0.462,0.339],[0.45,0.35],[0.44,0.366],[0.432,0.386],[0.426,0.408],[0.422,0.431],[0.421,0.456],[0.422,0.481],[0.426,0.505],[0.432,0.527],[0.441,0.546],[0.451,0.563],[0.462,0.575],[0.475,0.583],[0.488,0.586],[0.501,0.584],[0.514,0.578],[0.526,0.566],[0.536,0.551],[0.545,0.531],[0.551,0.509],[0.555,0.485]],[[0.557,0.46],[0.555,0.434],[0.551,0.409],[0.545,0.387],[0.536,0.367],[0.526,0.35],[0.514,0.339],[0.501,0.331],[0.488,0.329],[0.474,0.331],[0.462,0.339],[0.45,0.35],[0.44,0.366],[0.432,0.386],[0.426,0.407],[0.422,0.431],[0.421,0.456],[0.422,0.481],[0.426,0.505],[0.432,0.527],[0.44,0.546],[0.451,0.563],[0.462,0.575],[0.475,0.583],[0.488,0.586],[0.501,0.585],[0.514,0.578],[0.526,0.567],[0.536,0.551],[0.545,0.532],[0.551,0.509],[0.555,0.485]],[[0.557,0.46],[0.555,0.434],[0.551,0.409],[0.545,0.387],[0.536,0.367],[0.526,0.35],[0.514,0.338],[0.501,0.331],[0.488,0.329],[0.474,0.331],[0.462,0.338],[0.45,0.35],[0.44,0.366],[0.432,0.385],[0.426,0.407],[0.422,0.431],[0.421,0.456],[0.422,0.481],[0.426,0.505],[0.432,0.527],[0.44,0.546],[0.45,0.563],[0.462,0.575],[0.475,0.583],[0.488,0.586],[0.501,0.585],[0.514,0.578],[0.526,0.567],[0.536,0.551],[0.545,0.532],[0.551,0.509],[0.555,0.485]],[[0.557,0.46],[0.555,0.434],[0.551,0.409],[0.545,0.386],[0.536,0.366],[0.526,0.35],[0.514,0.338],[0.501,0.331],[0.488,0.328],[0.474,0.331],[0.462,0.338],[0.45,0.35],[0.44,0.366],[0.432,0.385],[0.426,0.407],[0.422,0.431],[0.421,0.456],[0.422,0.481],[0.426,0.505],[0.432,0.527],[0.44,0.547],[0.45,0.563],[0.462,0.575],[0.474,0.583],[0.488,0.587],[0.501,0.585],[0.514,0.578],[0.526,0.567],[0.536,0.551],[0.545,0.532],[0.551,0.509],[0.555,0.485]],[[0.557,0.46],[0.555,0.434],[0.551,0.409],[0.545,0.386],[0.536,0.366],[0.526,0.35],[0.514,0.338],[0.501,0.331],[0.487,0.328],[0.474,0.331],[0.462,0.338],[0.45,0.35],[0.44,0.366],[0.432,0.385],[0.425,0.407],[0.422,0.431],[0.421,0.456],[0.422,0.481],[0.426,0.505],[0.432,0.527],[0.44,0.547],[0.45,0.563],[0.462,0.576],[0.474,0.584],[0.487,0.587],[0.501,0.585],[0.514,0.578],[0.526,0.567],[0.536,0.551],[0.545,0.532],[0.551,0.509],[0.555,0.485]],[[0.556,0.46],[0.555,0.434],[0.551,0.409],[0.545,0.386],[0.536,0.366],[0.526,0.35],[0.514,0.338],[0.501,0.33],[0.487,0.328],[0.474,0.33],[0.461,0.338],[0.45,0.349],[0.44,0.365],[0.431,0.385],[0.425,0.407],[0.422,0.431],[0.42,0.456],[0.422,0.481],[0.425,0.505],[0.432,0.527],[0.44,0.547],[0.45,0.563],[0.462,0.576],[0.474,0.584],[0.487,0.587],[0.501,0.585],[0.514,0.579],[0.525,0.567],[0.536,0.551],[0.545,0.532],[0.551,0.51],[0.555,0.485]],[[0.556,0.46],[0.555,0.434],[0.551,0.409],[0.545,0.386],[0.536,0.366],[0.525,0.349],[0.513,0.337],[0.501,0.33],[0.487,0.327],[0.474,0.33],[0.461,0.337],[0.45,0.349],[0.44,0.365],[0.431,0.385],[0.425,0.407],[0.421,0.431],[0.42,0.456],[0.421,0.481],[0.425,0.505],[0.431,0.527],[0.44,0.547],[0.45,0.563],[0.461,0.576],[0.474,0.584],[0.487,0.587],[0.501,0.585],[0.513,0.579],[0.525,0.567],[0.536,0.552],[0.545,0.532],[0.551,0.51],[0.555,0.485]],[[0.556,0.46],[0.555,0.434],[0.551,0.409],[0.545,0.386],[0.536,0.366],[0.525,0.349],[0.513,0.337],[0.5,0.329],[0.487,0.327],[0.474,0.329],[0.461,0.337],[0.449,0.349],[0.439,0.365],[0.431,0.384],[0.425,0.406],[0.421,0.43],[0.42,0.456],[0.421,0.48],[0.425,0.505],[0.431,0.527],[0.44,0.547],[0.45,0.564],[0.461,0.576],[0.474,0.584],[0.487,0.587],[0.5,0.586],[0.513,0.579],[0.525,0.568],[0.536,0.552],[0.544,0.532],[0.551,0.51],[0.555,0.485]],[[0.556,0.46],[0.555,0.434],[0.551,0.409],[0.544,0.386],[0.536,0.365],[0.525,0.349],[0.513,0.337],[0.5,0.329],[0.487,0.326],[0.474,0.329],[0.461,0.336],[0.449,0.348],[0.439,0.364],[0.431,0.384],[0.425,0.406],[0.421,0.43],[0.42,0.455],[0.421,0.48],[0.425,0.505],[0.431,0.527],[0.439,0.547],[0.449,0.564],[0.461,0.576],[0.474,0.585],[0.487,0.588],[0.5,0.586],[0.513,0.579],[0.525,0.568],[0.536,0.552],[0.544,0.533],[0.551,0.51],[0.555,0.485]],[[0.556,0.46],[0.555,0.433],[0.551,0.408],[0.544,0.385],[0.536,0.365],[0.525,0.348],[0.513,0.336],[0.5,0.328],[0.487,0.326],[0.473,0.328],[0.461,0.336],[0.449,0.348],[0.439,0.364],[0.43,0.384],[0.424,0.406],[0.421,0.43],[0.419,0.455],[0.421,0.48],[0.424,0.505],[0.431,0.527],[0.439,0.547],[0.449,0.564],[0.461,0.577],[0.473,0.585],[0.487,0.588],[0.5,0.587],[0.513,0.58],[0.525,0.568],[0.536,0.553],[0.544,0.533],[0.551,0.51],[0.555,0.485]],[[0.556,0.46],[0.555,0.433],[0.551,0.408],[0.544,0.385],[0.536,0.365],[0.525,0.348],[0.513,0.336],[0.5,0.328],[0.486,0.325],[0.473,0.328],[0.46,0.335],[0.449,0.347],[0.439,0.363],[0.43,0.383],[0.424,0.406],[0.42,0.43],[0.419,0.455],[0.42,0.48],[0.424,0.505],[0.43,0.527],[0.439,0.547],[0.449,0.564],[0.461,0.577],[0.473,0.585],[0.486,0.589],[0.5,0.587],[0.513,0.58],[0.525,0.569],[0.535,0.553],[0.544,0.533],[0.551,0.511],[0.555,0.486]],[[0.556,0.46],[0.555,0.433],[0.551,0.408],[0.544,0.385],[0.535,0.364],[0.525,0.347],[0.513,0.335],[0.5,0.327],[0.486,0.325],[0.473,0.327],[0.46,0.335],[0.448,0.347],[0.438,0.363],[0.43,0.383],[0.424,0.405],[0.42,0.429],[0.419,0.455],[0.42,0.48],[0.424,0.505],[0.43,0.527],[0.438,0.548],[0.449,0.565],[0.46,0.577],[0.473,0.586],[0.486,0.589],[0.5,0.587],[0.513,0.581],[0.525,0.569],[0.535,0.553],[0.544,0.534],[0.551,0.511],[0.555,0.486]],[[0.556,0.46],[0.555,0.433],[0.551,0.408],[0.544,0.384],[0.535,0.364],[0.525,0.347],[0.512,0.334],[0.499,0.327],[0.486,0.324],[0.472,0.326],[0.46,0.334],[0.448,0.346],[0.438,0.362],[0.429,0.382],[0.423,0.405],[0.42,0.429],[0.418,0.455],[0.42,0.48],[0.423,0.505],[0.43,0.528],[0.438,0.548],[0.448,0.565],[0.46,0.578],[0.473,0.586],[0.486,0.59],[0.499,0.588],[0.512,0.581],[0.524,0.57],[0.535,0.554],[0.544,0.534],[0.55,0.511],[0.555,0.486]],[[0.556,0.46],[0.554,0.433],[0.55,0.408],[0.544,0.384],[0.535,0.363],[0.524,0.346],[0.512,0.334],[0.499,0.326],[0.486,0.323],[0.472,0.326],[0.459,0.333],[0.448,0.345],[0.437,0.362],[0.429,0.382],[0.423,0.404],[0.419,0.429],[0.418,0.454],[0.419,0.48],[0.423,0.505],[0.429,0.528],[0.438,0.548],[0.448,0.565],[0.46,0.578],[0.472,0.587],[0.486,0.59],[0.499,0.588],[0.512,0.582],[0.524,0.57],[0.535,0.554],[0.544,0.534],[0.55,0.511],[0.554,0.486]],[[0.556,0.46],[0.554,0.433],[0.55,0.407],[0.544,0.384],[0.535,0.363],[0.524,0.346],[0.512,0.333],[0.499,0.325],[0.485,0.322],[0.472,0.325],[0.459,0.332],[0.447,0.345],[0.437,0.361],[0.429,0.381],[0.422,0.404],[0.419,0.428],[0.417,0.454],[0.419,0.48],[0.423,0.505],[0.429,0.528],[0.437,0.548],[0.448,0.565],[0.459,0.578],[0.472,0.587],[0.485,0.591],[0.499,0.589],[0.512,0.582],[0.524,0.571],[0.535,0.555],[0.544,0.535],[0.55,0.512],[0.554,0.486]],[[0.556,0.46],[0.554,0.433],[0.55,0.407],[0.544,0.383],[0.535,0.362],[0.524,0.345],[0.512,0.332],[0.499,0.324],[0.485,0.322],[0.471,0.324],[0.459,0.332],[0.447,0.344],[0.437,0.36],[0.428,0.38],[0.422,0.403],[0.418,0.428],[0.417,0.454],[0.418,0.48],[0.422,0.505],[0.428,0.528],[0.437,0.548],[0.447,0.566],[0.459,0.579],[0.472,0.588],[0.485,0.591],[0.499,0.59],[0.512,0.583],[0.524,0.571],[0.535,0.555],[0.543,0.535],[0.55,0.512],[0.554,0.486]],[[0.555,0.46],[0.554,0.433],[0.55,0.407],[0.543,0.383],[0.534,0.361],[0.524,0.344],[0.511,0.331],[0.498,0.323],[0.485,0.321],[0.471,0.323],[0.458,0.331],[0.446,0.343],[0.436,0.359],[0.428,0.38],[0.422,0.403],[0.418,0.427],[0.417,0.453],[0.418,0.479],[0.422,0.505],[0.428,0.528],[0.436,0.549],[0.447,0.566],[0.459,0.579],[0.471,0.588],[0.485,0.592],[0.498,0.59],[0.511,0.584],[0.524,0.572],[0.534,0.556],[0.543,0.536],[0.55,0.512],[0.554,0.487]],[[0.555,0.46],[0.554,0.433],[0.55,0.406],[0.543,0.382],[0.534,0.361],[0.523,0.343],[0.511,0.331],[0.498,0.322],[0.484,0.32],[0.471,0.322],[0.458,0.33],[0.446,0.342],[0.436,0.359],[0.427,0.379],[0.421,0.402],[0.417,0.427],[0.416,0.453],[0.417,0.479],[0.421,0.505],[0.428,0.528],[0.436,0.549],[0.446,0.567],[0.458,0.58],[0.471,0.589],[0.484,0.592],[0.498,0.591],[0.511,0.584],[0.523,0.573],[0.534,0.556],[0.543,0.536],[0.55,0.513],[0.554,0.487]],[[0.555,0.46],[0.554,0.433],[0.55,0.406],[0.543,0.382],[0.534,0.36],[0.523,0.343],[0.511,0.33],[0.498,0.321],[0.484,0.319],[0.47,0.321],[0.457,0.329],[0.446,0.341],[0.435,0.358],[0.427,0.378],[0.421,0.401],[0.417,0.426],[0.416,0.453],[0.417,0.479],[0.421,0.504],[0.427,0.528],[0.435,0.549],[0.446,0.567],[0.458,0.58],[0.47,0.589],[0.484,0.593],[0.498,0.592],[0.511,0.585],[0.523,0.573],[0.534,0.557],[0.543,0.537],[0.549,0.513],[0.554,0.487]],[[0.555,0.46],[0.553,0.432],[0.549,0.406],[0.543,0.381],[0.534,0.36],[0.523,0.342],[0.51,0.329],[0.497,0.32],[0.483,0.318],[0.47,0.32],[0.457,0.328],[0.445,0.34],[0.435,0.357],[0.426,0.377],[0.42,0.401],[0.416,0.426],[0.415,0.452],[0.416,0.479],[0.42,0.504],[0.427,0.528],[0.435,0.549],[0.445,0.567],[0.457,0.581],[0.47,0.59],[0.484,0.594],[0.497,0.592],[0.51,0.586],[0.523,0.574],[0.534,0.558],[0.543,0.537],[0.549,0.514],[0.553,0.487]]]},"spts":{"meeting":{"pts":{"screen":[0.8098,0.6827],"m1":[0.8629,0.765],"m2":[0.8627,0.8127],"flap":[0.8631,0.7037],"missile":[0.7611,0.4987],"cam":[0.7945,0.5506],"lepton":[0.8298,0.5487],"lightbar":[0.7375,0.7936],"knob":[0.8097,0.8779],"rec":[0.7791,0.8814],"ia":[0.8367,0.8728],"top":[0.8,0.4894],"bottom":[0.8,0.9226]},"feat":{"screen":[0.8098,0.6827,1.0],"ring":[0.8507,0.5998,1.0],"knob":[0.809,0.8775,1.0],"slider":[0.7836,0.8379,1.0],"rec":[0.7767,0.8788,1.0],"ia":[0.8341,0.8703,1.0],"mic":[0.765,0.8408,1.0],"lightbar":[0.74,0.7932,1.0],"privacy":[0.7379,0.5895,1.0]},"scr":[[0.859,0.678],[0.858,0.66],[0.855,0.643],[0.851,0.627],[0.845,0.613],[0.837,0.602],[0.829,0.594],[0.82,0.589],[0.81,0.588],[0.8,0.59],[0.791,0.596],[0.782,0.606],[0.774,0.618],[0.768,0.633],[0.763,0.65],[0.76,0.668],[0.759,0.687],[0.76,0.706],[0.763,0.724],[0.768,0.74],[0.774,0.753],[0.782,0.764],[0.791,0.772],[0.8,0.776],[0.81,0.777],[0.819,0.774],[0.829,0.767],[0.837,0.758],[0.844,0.745],[0.85,0.731],[0.855,0.714],[0.858,0.696]]},"night":{"pts":{"screen":[0.6465,0.5458],"m1":[0.7029,0.6233],"m2":[0.7027,0.6688],"flap":[0.7031,0.5648],"missile":[0.6014,0.3692],"cam":[0.6376,0.4168],"lepton":[0.6728,0.4149],"lightbar":[0.5783,0.648],"knob":[0.6464,0.7308],"rec":[0.6166,0.733],"ia":[0.6738,0.7265],"top":[0.64,0.3601],"bottom":[0.64,0.7713]},"feat":{"screen":[0.6465,0.5458,1.0],"ring":[0.6876,0.467,1.0],"knob":[0.6459,0.7303,1.0],"slider":[0.6211,0.6921,1.0],"rec":[0.6151,0.7301,1.0],"ia":[0.672,0.7237,1.0],"mic":[0.6026,0.6944,1.0],"lightbar":[0.5807,0.6477,0.65],"privacy":[0.5785,0.4553,0.66],"trigger":[0.6014,0.3957,0.22]},"scr":[[0.695,0.542],[0.695,0.525],[0.692,0.508],[0.687,0.493],[0.681,0.48],[0.674,0.469],[0.665,0.461],[0.656,0.457],[0.646,0.456],[0.637,0.458],[0.627,0.464],[0.619,0.473],[0.611,0.484],[0.605,0.499],[0.6,0.515],[0.598,0.532],[0.597,0.55],[0.598,0.567],[0.601,0.584],[0.605,0.599],[0.611,0.612],[0.619,0.623],[0.628,0.63],[0.637,0.634],[0.646,0.635],[0.656,0.632],[0.665,0.626],[0.674,0.618],[0.681,0.606],[0.687,0.592],[0.692,0.576],[0.694,0.559]]},"studio":{"pts":{"screen":[0.4719,0.4507],"m1":[0.5987,0.6323],"m2":[0.5983,0.72],"flap":[0.5993,0.5192],"missile":[0.4444,0.1271],"cam":[0.5318,0.2252],"lepton":[0.5867,0.2288],"lightbar":[0.4131,0.6096],"knob":[0.4723,0.7901],"rec":[0.4355,0.7751],"ia":[0.5197,0.803],"top":[0.5,0.1145],"bottom":[0.5,0.8674]},"feat":{"screen":[0.4719,0.4507,1.0],"ring":[0.5365,0.3174,1.0],"knob":[0.4744,0.7895,1.0],"slider":[0.4431,0.705,1.0],"rec":[0.4428,0.771,1.0],"ia":[0.5268,0.7985,1.0],"mic":[0.4159,0.6978,1.0],"m1":[0.5915,0.6306,1.0],"m2":[0.5911,0.718,1.0],"flap":[0.591,0.5176,1.0]},"scr":[[0.547,0.464],[0.546,0.43],[0.541,0.397],[0.534,0.367],[0.525,0.34],[0.513,0.317],[0.5,0.3],[0.486,0.289],[0.472,0.284],[0.457,0.286],[0.444,0.294],[0.432,0.308],[0.421,0.327],[0.413,0.351],[0.406,0.378],[0.403,0.408],[0.402,0.439],[0.403,0.47],[0.407,0.501],[0.413,0.529],[0.422,0.555],[0.433,0.578],[0.445,0.596],[0.458,0.608],[0.472,0.615],[0.486,0.615],[0.5,0.609],[0.513,0.597],[0.524,0.579],[0.534,0.555],[0.541,0.528],[0.546,0.497]]}},"bbox":{"c13":[[0.385,0.111,0.617,0.904],[0.385,0.111,0.616,0.904],[0.385,0.111,0.616,0.904],[0.386,0.111,0.616,0.906],[0.386,0.111,0.615,0.906],[0.388,0.111,0.614,0.907],[0.389,0.11,0.612,0.909],[0.392,0.109,0.609,0.91],[0.395,0.108,0.606,0.912],[0.399,0.106,0.601,0.913],[0.404,0.103,0.597,0.914],[0.409,0.102,0.591,0.916],[0.416,0.1,0.585,0.917],[0.422,0.098,0.578,0.918],[0.429,0.096,0.571,0.918],[0.436,0.094,0.564,0.918],[0.442,0.092,0.558,0.918],[0.448,0.091,0.552,0.918],[0.444,0.09,0.548,0.918],[0.441,0.09,0.545,0.919],[0.438,0.089,0.547,0.919],[0.437,0.089,0.548,0.919],[0.436,0.089,0.549,0.919],[0.436,0.089,0.549,0.919],[0.436,0.089,0.549,0.919],[0.436,0.089,0.549,0.919],[0.434,0.089,0.55,0.919],[0.432,0.089,0.552,0.92],[0.429,0.09,0.555,0.92],[0.425,0.09,0.559,0.92],[0.42,0.091,0.563,0.92],[0.414,0.092,0.569,0.92],[0.408,0.094,0.575,0.92],[0.402,0.096,0.581,0.919],[0.396,0.098,0.588,0.919],[0.39,0.099,0.594,0.918],[0.386,0.101,0.601,0.916],[0.382,0.103,0.606,0.913],[0.379,0.106,0.612,0.91],[0.378,0.107,0.616,0.908],[0.377,0.107,0.619,0.903],[0.376,0.108,0.621,0.9],[0.376,0.108,0.622,0.897],[0.378,0.108,0.623,0.893],[0.378,0.109,0.622,0.89],[0.378,0.109,0.622,0.887],[0.378,0.109,0.621,0.884],[0.378,0.109,0.621,0.883],[0.378,0.11,0.621,0.882],[0.379,0.11,0.62,0.881],[0.379,0.11,0.62,0.881],[0.379,0.11,0.62,0.88],[0.379,0.11,0.62,0.88],[0.379,0.11,0.62,0.881],[0.379,0.109,0.62,0.881],[0.379,0.109,0.62,0.881],[0.378,0.108,0.62,0.882],[0.378,0.106,0.62,0.883],[0.377,0.103,0.621,0.886],[0.376,0.101,0.622,0.887],[0.377,0.098,0.623,0.888],[0.379,0.094,0.623,0.889],[0.381,0.091,0.622,0.889],[0.386,0.086,0.621,0.889],[0.391,0.079,0.618,0.887],[0.398,0.071,0.614,0.883],[0.405,0.064,0.609,0.88],[0.413,0.056,0.602,0.873],[0.421,0.048,0.594,0.867],[0.429,0.039,0.587,0.859],[0.436,0.03,0.579,0.851],[0.442,0.021,0.572,0.842],[0.448,0.011,0.566,0.832],[0.452,0.002,0.561,0.822],[0.455,0.0,0.558,0.812],[0.453,0.0,0.556,0.802],[0.452,0.0,0.556,0.792],[0.452,0.0,0.556,0.782],[0.452,0.0,0.556,0.772],[0.451,0.0,0.555,0.762],[0.449,0.0,0.553,0.751],[0.446,0.0,0.554,0.74],[0.441,0.0,0.559,0.728],[0.434,0.0,0.565,0.713],[0.424,0.0,0.573,0.699],[0.414,0.0,0.582,0.699],[0.404,0.0,0.592,0.702],[0.392,0.0,0.602,0.707],[0.382,0.0,0.612,0.71],[0.372,0.0,0.62,0.712],[0.365,0.0,0.629,0.711],[0.36,0.0,0.637,0.706],[0.358,0.0,0.641,0.696],[0.359,0.0,0.643,0.682],[0.358,0.0,0.642,0.664],[0.353,0.012,0.643,0.671],[0.351,0.022,0.648,0.682],[0.349,0.031,0.649,0.692],[0.349,0.039,0.651,0.7],[0.349,0.044,0.651,0.707],[0.35,0.048,0.651,0.711],[0.35,0.05,0.651,0.713],[0.35,0.051,0.651,0.714],[0.35,0.051,0.651,0.714],[0.35,0.05,0.651,0.714],[0.35,0.042,0.651,0.718],[0.35,0.024,0.652,0.727],[0.351,0.0,0.652,0.741],[0.351,0.0,0.652,0.763],[0.352,0.0,0.652,0.793],[0.354,0.0,0.651,0.83],[0.358,0.0,0.649,0.867],[0.36,0.0,0.646,0.898],[0.361,0.0,0.641,0.962],[0.363,0.059,0.641,0.999],[0.366,0.101,0.641,0.999],[0.369,0.133,0.639,0.999],[0.372,0.163,0.637,0.999],[0.374,0.188,0.634,0.999],[0.376,0.206,0.631,0.999],[0.378,0.218,0.629,0.997],[0.378,0.224,0.629,0.984],[0.379,0.227,0.628,0.979],[0.379,0.227,0.628,0.978],[0.379,0.227,0.628,0.978],[0.379,0.226,0.628,0.98],[0.379,0.224,0.629,0.983],[0.38,0.221,0.629,0.989],[0.381,0.216,0.631,0.997],[0.382,0.21,0.632,0.999],[0.384,0.202,0.634,0.999],[0.386,0.193,0.635,0.999],[0.388,0.184,0.636,0.999],[0.389,0.176,0.636,0.999],[0.391,0.169,0.636,0.999],[0.393,0.162,0.636,0.989],[0.394,0.159,0.636,0.974],[0.396,0.153,0.635,0.96],[0.397,0.148,0.634,0.947],[0.398,0.144,0.633,0.936],[0.399,0.142,0.632,0.928],[0.399,0.141,0.632,0.922],[0.399,0.141,0.632,0.921],[0.399,0.141,0.632,0.92]],"c03":[[0.269,0.0,0.812,0.914],[0.269,0.0,0.812,0.914],[0.269,0.0,0.812,0.914],[0.269,0.0,0.812,0.914],[0.268,0.0,0.813,0.914],[0.267,0.0,0.814,0.913],[0.266,0.0,0.816,0.912],[0.264,0.0,0.817,0.912],[0.262,0.0,0.819,0.91],[0.26,0.0,0.821,0.909],[0.256,0.0,0.824,0.907],[0.252,0.0,0.827,0.906],[0.248,0.0,0.83,0.902],[0.244,0.0,0.834,0.9],[0.239,0.0,0.838,0.897],[0.234,0.0,0.842,0.894],[0.228,0.0,0.846,0.891],[0.222,0.0,0.85,0.888],[0.217,0.0,0.854,0.884],[0.211,0.0,0.858,0.881],[0.206,0.0,0.862,0.878],[0.201,0.0,0.866,0.874],[0.196,0.0,0.869,0.871],[0.192,0.0,0.874,0.869],[0.188,0.0,0.878,0.867],[0.185,0.0,0.88,0.864],[0.183,0.0,0.882,0.863],[0.181,0.0,0.884,0.862],[0.18,0.0,0.886,0.861],[0.179,0.0,0.886,0.861],[0.179,0.0,0.886,0.861],[0.179,0.0,0.886,0.861]],"c05":[[0.425,0.0,0.721,0.973],[0.425,0.0,0.721,0.973],[0.425,0.0,0.721,0.973],[0.425,0.0,0.721,0.973],[0.425,0.0,0.721,0.974],[0.425,0.0,0.721,0.976],[0.425,0.0,0.721,0.977],[0.425,0.0,0.721,0.979],[0.424,0.0,0.721,0.981],[0.424,0.0,0.721,0.983],[0.424,0.0,0.721,0.986],[0.424,0.0,0.721,0.989],[0.424,0.0,0.72,0.992],[0.423,0.0,0.719,0.996],[0.423,0.0,0.719,0.999],[0.422,0.0,0.719,0.999],[0.422,0.0,0.719,0.999],[0.422,0.0,0.719,0.999],[0.421,0.0,0.719,0.999],[0.421,0.0,0.719,0.999],[0.421,0.0,0.718,0.999],[0.421,0.0,0.719,0.999],[0.421,0.0,0.719,0.999],[0.421,0.0,0.719,0.999],[0.421,0.0,0.719,0.999],[0.42,0.0,0.719,0.999],[0.42,0.0,0.719,0.999],[0.42,0.0,0.719,0.999],[0.42,0.0,0.719,0.999],[0.42,0.0,0.719,0.999],[0.418,0.0,0.719,0.999],[0.414,0.0,0.721,0.999],[0.407,0.0,0.726,0.999],[0.398,0.0,0.73,0.999],[0.387,0.0,0.736,0.999],[0.376,0.0,0.74,0.999],[0.369,0.0,0.743,0.999],[0.366,0.0,0.745,0.999],[0.366,0.0,0.745,0.999],[0.366,0.0,0.745,0.999],[0.366,0.0,0.745,0.999],[0.366,0.0,0.745,0.999],[0.366,0.0,0.745,0.999],[0.366,0.0,0.745,0.999],[0.366,0.0,0.745,0.999],[0.366,0.0,0.745,0.999],[0.366,0.0,0.745,0.999],[0.366,0.0,0.745,0.999]],"c06":[[0.353,0.346,0.834,0.999],[0.353,0.346,0.834,0.999],[0.353,0.346,0.834,0.999],[0.352,0.346,0.835,0.999],[0.352,0.346,0.836,0.999],[0.352,0.346,0.836,0.999],[0.352,0.344,0.838,0.999],[0.352,0.344,0.839,0.999],[0.352,0.343,0.841,0.999],[0.351,0.342,0.843,0.999],[0.351,0.342,0.846,0.999],[0.351,0.341,0.849,0.999],[0.35,0.339,0.852,0.999],[0.35,0.338,0.856,0.999],[0.349,0.336,0.861,0.999],[0.349,0.333,0.865,0.999],[0.348,0.332,0.87,0.999],[0.348,0.31,0.876,0.999],[0.347,0.28,0.881,0.999],[0.346,0.25,0.887,0.999],[0.345,0.222,0.893,0.999],[0.344,0.2,0.899,0.999],[0.343,0.182,0.906,0.999],[0.343,0.17,0.912,0.999],[0.342,0.16,0.918,0.999],[0.341,0.154,0.924,0.999],[0.34,0.15,0.929,0.999],[0.339,0.147,0.935,0.999],[0.339,0.143,0.94,0.999],[0.338,0.141,0.944,0.999],[0.338,0.139,0.948,0.999],[0.338,0.137,0.952,0.999],[0.338,0.136,0.955,0.999],[0.338,0.134,0.958,0.999],[0.337,0.133,0.959,0.999],[0.336,0.132,0.961,0.999],[0.336,0.132,0.961,0.999],[0.336,0.132,0.962,0.999],[0.336,0.132,0.962,0.999],[0.336,0.132,0.962,0.999]]},"play":{"ar":0.5127,"states":["base","clima","cal","mail","m1a","m1b","m2","rec","rec2","ask","sec","leak","gym","dog","sosA","sosB"],"pts":{"screen":[0.3892,0.4775],"ring":[0.6173,0.3509],"knob":[0.3997,0.8198],"slider":[0.2916,0.7282],"rec":[0.2923,0.7919],"ia":[0.5844,0.8341],"mic":[0.1966,0.7166],"m1":[0.8161,0.6696],"m2":[0.8136,0.7578],"flap":[0.8154,0.5545],"lightbar":[0.2034,0.6194],"privacy":[0.1886,0.2751],"cover":[0.2938,0.1465],"trigger":[0.2985,0.1756],"finger":[0.2978,0.1507],"cam":[0.6061,0.2332],"thermal":[0.8013,0.2457],"home":[0.7102,0.3725],"touchpad":[0.5804,0.6357],"usb":[0.477,0.8614],"spk_l":[0.3216,0.8428],"spk_r":[0.7149,0.9023],"magnet_l":[0.3422,0.8649],"magnet_r":[0.6173,0.9072]}}};
+  const CALL = D.call || {}, FEAT = D.feat || {}, SCR = D.scr || {}, SP = D.spts || {};
+  const PIN = {
+    screen: ['Pantalla redonda', '1,28″, táctil'], ring: ['Aro giratorio', 'acero, con clics magnéticos'], knob: ['Knob', 'aluminio, con clics'],
+    slider: ['Slider', 'con tope magnético'], rec: ['REC', 'escucha y resume'], ia: ['IA', 'habla con tu IA'], mic: ['Micrófonos', 'dos, para tu voz'],
+    m1: ['M1', 'tu primer atajo'], m2: ['M2', 'tu segundo atajo'], flap: ['Flap', 'protege las teclas'], lightbar: ['Barra de luz', '13 LED de estado'],
+    privacy: ['Seguro de privacidad', 'corta micrófonos y cámaras'], cover: ['Tapa de seguridad', 'aluminio con resorte'], trigger: ['Botón de disparo', 'para lo importante'],
+    finger: ['Lector de huella', 'confirma que eres tú'], cam: ['Cámara 5 MP', 'OV5640'], thermal: ['Cámara térmica', 'FLIR Lepton 3.5'], home: ['Home', 'y encendido'],
+    power: ['Encendido', ''], touchpad: ['Touchpad', 'toda la espalda'], usb: ['USB-C', 'carga y datos'], spk_l: ['Bocina', 'izquierda'], spk_r: ['Bocina', 'derecha'],
+    magnet_l: ['Imanes', 'para accesorios'], magnet_r: ['Imanes', 'para accesorios']
+  };
+  const LABELS = ['Chasis de aluminio','Frente y antena','Pantalla 1,28″','Controles','Aro y vidrio','Teclas laterales','Luz y privacidad','Disparo y huella','Tarjeta y bocinas','Cámaras','Batería','Touchpad','Tapa trasera'];
+  const GROUPS = [[1,2,3,4],[0,5,6,7],[8,9],[10,11,12]];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root = document.documentElement;
+  const $ = (s) => document.querySelector(s);
+  const canvas = $('#film'), ctx = canvas.getContext('2d');
+  const wrap = $('#filmwrap'), herocap = $('#herocap'), loadEl = $('#load');
+  const scrim = $('#scrim'), pulse = $('#pulse'), pinsEl = $('#pins'), tagsEl = $('#tags');
+  const notif = $('#notif'), notifImg = notif.querySelector('img'), timecard = $('#timecard');
+  const sm = (x) => { x = Math.min(Math.max(x, 0), 1); return x * x * (3 - 2 * x); };
+  const cl = (x, a, b) => Math.min(Math.max(x, a), b);
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const pad3 = (i) => String(i).padStart(3, '0');
+
+  // ---------- tomas ----------
+  function parsePins(s) {
+    if (!s) return [];
+    const L = s.split(',');
+    return L.map((t, i) => { const [nm, dsp] = t.split('/'); const dir = dsp ? dsp[0] : '', dl = dsp && dsp.length > 1 ? +dsp.slice(1) : 0; const [name, r] = nm.split('@'); let a = 0.14 + i * 0.05, b = 0.94; if (r) { const q = r.split('-'); a = +q[0]; b = +q[1]; } return {name, a, b, dir, dl}; });
+  }
+  function parseBeats(el, text) {
+    return [...el.querySelectorAll('.beat')].map(b => {
+      const d = b.dataset, cls = b.classList, side = cls.contains('r') ? 'r' : cls.contains('c') ? 'c' : 'l', pos = cls.contains('bl') ? 'bl' : cls.contains('tl') ? 'tl' : side;
+      b.classList.add(d.text || text);
+      return {el: b, at: +d.at, h: d.h !== undefined ? +d.h : 0.08, side, dr: d.dr !== undefined ? +d.dr : side === 'l' ? 1 : side === 'r' ? -1 : 0,
+        k: d.k !== undefined ? +d.k : null, y: d.y !== undefined ? +d.y : null, pos, text: d.text || text,
+        s: d.s !== undefined ? +d.s : null, z: d.z !== undefined ? +d.z : null, ft: d.ft !== undefined ? +d.ft : null,
+        pulse: d.pulse || null, steps: d.steps ? +d.steps : 0, flow: b.querySelector('.flow'), vis: -1, empty: !b.children.length};
+    }).sort((a, b) => a.at - b.at);
+  }
+  function coarse(n) { const out = [], seen = new Uint8Array(n); for (const s of [8, 4, 2, 1]) for (let i = 0; i < n; i += s) if (!seen[i]) { seen[i] = 1; out.push(i); } if (!seen[n - 1]) out.push(n - 1); return out; }
+  const SEC = [...document.querySelectorAll('.shot')].map((el, k) => {
+    const d = el.dataset;
+    const o = {el, k, kind: d.kind, id: d.id, sid: d.sid || d.id, tx: d.tx || 'x', txlen: +(d.txlen || 50), text: d.text || 'ink', navdark: !!d.navdark,
+      mw: +(d.mw || 0.56), mw2: +(d.mw2 || d.mw || 0.56), fx: +(d.fx || 0.5), ds: +(d.ds || 1), amp: +(d.amp || 0.15),
+      time: d.time || null, timelabel: d.timelabel || '', notif: d.notif ? d.notif.split('|') : null, thumb: d.thumb || null,
+      pins: parsePins(d.pins), files: [], q: 0, top: 0, h: 0};
+    o.beats = parseBeats(el, o.text);
+    if (o.kind === 'seq') {
+      o.n = +d.n; o.nf = Math.ceil(o.n / 2);
+      for (let j = 0; j < o.nf; j++) o.files.push({src: 'f/' + o.id + '/p' + pad3(j) + '.webp'});
+      o.order = coarse(o.nf);
+    } else if (o.kind === 'scene') {
+      o.states = d.states.split(',');
+      o.files = o.states.map(s => ({src: 's/' + o.sid + '/' + s + '.webp'}));
+      o.bgk = d.bg || 'none'; o.nbg = +(d.nbg || 0);
+      if (o.bgk === 'img' || o.bgk === 'vid') o.files.push({src: 's/' + o.sid + '/bg.jpg', bg: true});
+      if (o.bgk === 'seq') for (let j = 0; j < o.nbg; j++) o.files.push({src: 's/' + o.sid + '/b' + pad3(j) + '.jpg', bgf: j});
+      o.order = o.files.map((_, i) => i);
+      if (o.bgk === 'vid') {
+        const v = document.createElement('video'); v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'auto';
+        v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.src = 's/' + o.sid + '/bg.mp4'; o.video = v;
+      }
+    } else if (o.kind === 'grid') {
+      o.cells = d.cells.split(','); o.labels = d.labels.split('|');
+      o.files = o.cells.map(s => ({src: 's/thumbs/' + s + '.jpg'})); o.order = o.files.map((_, i) => i);
+    }
+    return o;
+  });
+  const BYID = {}; SEC.forEach(c => { BYID[c.id] = c; });
+  const tags = LABELS.map((t, i) => { const d = document.createElement('div'); d.className = 'tag'; d.innerHTML = '<i>' + String(i + 1).padStart(2, '0') + '</i><b></b>'; d.querySelector('b').textContent = t; tagsEl.appendChild(d); return d; });
+  const pinPool = Array.from({length: 12}, () => {
+    const d = document.createElement('div'); d.className = 'pin'; d.innerHTML = '<s></s><i></i><span><b></b><small></small></span>'; pinsEl.appendChild(d);
+    return {el: d, line: d.querySelector('s'), lab: d.querySelector('span'), b: d.querySelector('b'), sm: d.querySelector('small'), name: '', on: false};
+  });
+
+  // ---------- carga por cercanía ----------
+  let inflight = 0, cur = 0, done = 0, dirty = true;
+  const total = SEC.reduce((a, c) => a + c.files.length, 0);
+  function nextJob() {
+    const pri = [cur, cur + 1, cur + 2, cur - 1, cur + 3];
+    for (let k = 0; k < SEC.length; k++) if (!pri.includes(k)) pri.push(k);
+    for (const k of pri) { const c = SEC[k]; if (!c) continue; while (c.q < c.order.length) { const f = c.files[c.order[c.q]]; if (!f.img && !f.req) return f; c.q++; } }
+    return null;
+  }
+  function pump() {
+    while (inflight < 6) {
+      const f = nextJob(); if (!f) return;
+      f.req = 1; inflight++;
+      const im = new Image(); im.decoding = 'async';
+      const fin = (good) => { inflight--; if (good) { f.img = im; done++; dirty = true; loadEl.style.width = (100 * done / total).toFixed(1) + '%'; if (done >= total) loadEl.style.opacity = 0; } pump(); };
+      im.onload = () => (im.decode ? im.decode().then(() => fin(true), () => fin(true)) : fin(true));
+      im.onerror = () => fin(false);
+      im.src = f.src;
+    }
+  }
+  function seqSrc(c, i) {
+    i = cl(i, 0, c.n - 1);
+    const want = i >> 1;
+    if (c.files[want].img) return [c.files[want].img, i & 1];
+    for (let d = 1; d < c.nf; d++) {
+      if (want - d >= 0 && c.files[want - d].img) return [c.files[want - d].img, 1];
+      if (want + d < c.nf && c.files[want + d].img) return [c.files[want + d].img, 0];
+    }
+    return null;
+  }
+
+  // ---------- medidas ----------
+  let W = 0, H = 0, dpr = 1, portrait = false;
+  const wmC = document.createElement('canvas'), wctx = wmC.getContext('2d');
+  const tC = document.createElement('canvas'), tctx = tC.getContext('2d');
+  function measure() {
+    W = innerWidth; H = innerHeight; portrait = W / H < 0.95 || W <= 720;
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    wmC.width = tC.width = canvas.width; wmC.height = tC.height = canvas.height;
+    for (const c of SEC) { const r = c.el.getBoundingClientRect(); c.top = r.top + scrollY; c.h = r.height; }
+    buildWordmark();
+    dirty = true; last = '';
+  }
+
+  // ---------- tiempo, claves y colocación ----------
+  function keyed(B, key, p, dflt) {
+    const K = [];
+    for (const b of B) if (b[key] !== null && b[key] !== undefined) { const hk = b.h * 0.9; K.push([b.at - hk, b[key]], [b.at + hk, b[key]]); }
+    if (!K.length) return dflt;
+    K.sort((a, b) => a[0] - b[0]);
+    if (p <= K[0][0]) return K[0][1];
+    for (let i = 0; i < K.length - 1; i++) if (p < K[i + 1][0]) { const [p0, v0] = K[i], [p1, v1] = K[i + 1]; return p1 > p0 ? v0 + (v1 - v0) * sm((p - p0) / (p1 - p0)) : v1; }
+    return K[K.length - 1][1];
+  }
+  function seqT(c, p) {
+    const P = [[0.02, 0]];
+    for (const b of c.beats) if (b.ft !== null) P.push([b.at - b.h, b.ft], [b.at + b.h, b.ft]);
+    P.push([0.98, 1]); P.sort((a, b) => a[0] - b[0]);
+    if (p <= P[0][0]) return 0;
+    for (let i = 0; i < P.length - 1; i++) if (p < P[i + 1][0]) { const [p0, t0] = P[i], [p1, t1] = P[i + 1]; return p1 > p0 ? t0 + (t1 - t0) * sm((p - p0) / (p1 - p0)) : t1; }
+    return 1;
+  }
+  function place(c, p) {
+    let s, ox, oy;
+    const seqLike = c.kind === 'seq' || c.bgk === 'none';
+    if (seqLike) {
+      if (!portrait) {
+        s = Math.max(W / FW, H / FH) * c.ds * keyed(c.beats, 'k', p, 1);
+        ox = (W - FW * s) / 2 + keyed(c.beats, 'dr', p, 0) * W * c.amp * (W / H >= 1.25 ? 1 : 0.7); oy = (H - FH * s) / 2 + keyed(c.beats, 'y', p, 0) * H;
+      } else {
+        const mw = c.mw + (c.mw2 - c.mw) * sm((p - 0.45) / 0.4);
+        s = Math.max(W / (FW * mw), W / FW); ox = (W - FW * s) / 2; oy = H * 0.36 - FH * s / 2;
+      }
+      return {s, ox, oy};
+    }
+    const P = ((SP[c.sid] || {}).pts || {}).screen;
+    if (!portrait) {
+      s = Math.max(W / FW, H / FH); ox = (W - FW * s) / 2; oy = (H - FH * s) / 2;
+      if (P) { const px = ox + P[0] * FW * s, lim = W * 0.84; if (px > lim) ox = Math.max(W - FW * s, ox - (px - lim)); }
+    } else { s = Math.max(W / (FW * c.mw), W / FW); ox = Math.min(0, Math.max(W - FW * s, W / 2 - c.fx * FW * s)); oy = H * 0.34 - FH * s / 2; }
+    const z = keyed(c.beats, 'z', p, 1);
+    if (z > 1.001 && P) {
+      const u = sm((z - 1) / 0.6);
+      const fx0 = ox + P[0] * FW * s, fy0 = oy + P[1] * FH * s;
+      const tx = fx0 + ((portrait ? W * 0.5 : W * 0.66) - fx0) * u, ty = fy0 + ((portrait ? H * 0.34 : H * 0.5) - fy0) * u;
+      const S = s * z; ox = tx - P[0] * FW * S; oy = ty - P[1] * FH * S; s = S;
+      if (!portrait) { ox = Math.min(0, Math.max(W - FW * s, ox)); oy = Math.min(0, Math.max(H - FH * s, oy)); }
+    }
+    return {s, ox, oy};
+  }
+  const toV = (pl, q) => [pl.ox + q[0] * FW * pl.s, pl.oy + q[1] * FH * pl.s];
+  const scaleAbout = (pl, k, cx, cy) => ({s: pl.s * k, ox: cx + (pl.ox - cx) * k, oy: cy + (pl.oy - cy) * k});
+
+  // ---------- logotipo de la portada: atrás, reflejado en el cuerpo y pintado por la pantalla ----------
+  let WM = null;
+  function buildWordmark() {
+    const c = SEC[0], polys = SCR.c01; WM = null;
+    if (!polys || !polys.length) return;
+    const pl = place(c, 0), pts = polys[0].map(q => toV(pl, q));
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for (const [x, y] of pts) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    const Dm = Math.min(x1 - x0, y1 - y0), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    const font = (fs) => '700 ' + fs + 'px Inter, -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
+    const word = 'MEIER1', tr = -0.045;
+    const measureAt = (fs) => { wctx.font = font(fs); return [...word].map(ch => wctx.measureText(ch).width + tr * fs); };
+    let fs = Dm * 0.86, adv = measureAt(fs);
+    const totalW = adv.reduce((a, b) => a + b, 0);
+    if (totalW > W * 0.92) { fs *= W * 0.92 / totalW; adv = measureAt(fs); }
+    // el centro de la "I" queda en el centro de la pantalla
+    const before = adv[0] + adv[1], iw = adv[2];
+    const startX = cx - before - iw / 2, capH = fs * 0.727, base = cy + capH / 2;
+    wctx.setTransform(dpr, 0, 0, dpr, 0, 0); wctx.clearRect(0, 0, W, H);
+    wctx.font = font(fs); wctx.textBaseline = 'alphabetic';
+    const g = wctx.createLinearGradient(0, base - capH, 0, base); g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#9a9ca3');
+    wctx.fillStyle = g;
+    let x = startX; [...word].forEach((ch, i) => { wctx.fillText(ch, x, base); x += adv[i]; });
+    WM = {cx, cy, r: Dm / 2};
+  }
+  function polyPath(pts) { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); }
+  function heroOverlay(src, pl, i, wa) {
+    // reflejo del logotipo sobre el cuerpo oscuro
+    tctx.setTransform(1, 0, 0, 1, 0, 0); tctx.globalCompositeOperation = 'source-over'; tctx.globalAlpha = 1;
+    tctx.clearRect(0, 0, tC.width, tC.height); tctx.drawImage(wmC, 0, 0);
+    tctx.globalCompositeOperation = 'destination-in'; tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    tctx.drawImage(src[0], 0, src[1] * src[0].height / 2, src[0].width, src[0].height / 2, pl.ox, pl.oy, FW * pl.s, FH * pl.s);
+    tctx.setTransform(1, 0, 0, 1, 0, 0); tctx.globalCompositeOperation = 'source-over';
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = wa * 0.34; ctx.drawImage(tC, 0, 0); ctx.restore();
+    // la pantalla pinta la parte del logotipo que tapa el aparato
+    const poly = SCR.c01[Math.min(i, SCR.c01.length - 1)]; if (!poly) return;
+    const pts = poly.map(q => toV(pl, q));
+    let cx = 0, cy = 0; pts.forEach(q => { cx += q[0]; cy += q[1]; }); cx /= pts.length; cy /= pts.length;
+    let r = 0; pts.forEach(q => { r = Math.max(r, Math.hypot(q[0] - cx, q[1] - cy)); });
+    ctx.save(); polyPath(pts); ctx.clip();
+    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = wa * 0.96; ctx.drawImage(wmC, 0, 0, W, H);
+    ctx.globalCompositeOperation = 'source-over';
+    const g = ctx.createRadialGradient(cx, cy, r * 0.5, cx, cy, r); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.5)');
+    ctx.globalAlpha = wa; ctx.fillStyle = g; ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r);
+    ctx.restore();
+  }
+
+  // ---------- dibujar una toma ----------
+  function plate(img, sx, sy, sw, sh, pl) { ctx.drawImage(img, sx, sy, sw, sh, pl.ox, pl.oy, FW * pl.s, FH * pl.s); }
+  function drawShot(c, p, o) {
+    o = o || {};
+    const a = o.alpha === undefined ? 1 : o.alpha;
+    if (a <= 0.002) return null;
+    if (c.kind === 'grid') { drawGrid(c, p, a, o); return null; }
+    let pl = place(c, p); if (o.xf) pl = o.xf(pl);
+    ctx.globalAlpha = a;
+    if (c.kind === 'seq') {
+      const t = seqT(c, p), fi = t * (c.n - 1), i = Math.round(fi), src = seqSrc(c, i);
+      if (c.id === 'c01' && WM && !o.plain) {
+        const wa = a * (1 - sm((t - 0.07) / 0.16));
+        if (wa > 0.003) { ctx.globalAlpha = wa; ctx.drawImage(wmC, 0, 0, W, H); ctx.globalAlpha = a; }
+        if (src) plate(src[0], 0, src[1] * src[0].height / 2, src[0].width, src[0].height / 2, pl);
+        if (wa > 0.003 && src) heroOverlay(src, pl, i, wa);
+      } else if (src) plate(src[0], 0, src[1] * src[0].height / 2, src[0].width, src[0].height / 2, pl);
+      return {pl, fi, t};
+    }
+    // escena: fondo + aparato
+    if (c.bgk === 'seq') {
+      const j = Math.round(sm(cl((p - 0.12) / 0.62, 0, 1)) * (c.nbg - 1));
+      let f = null; for (let d = 0; d < c.nbg && !f; d++) { const q = c.files.find(x => x.bgf === j - d && x.img) || c.files.find(x => x.bgf === j + d && x.img); if (q) f = q; }
+      if (f) plate(f.img, 0, 0, f.img.width, f.img.height, pl);
+    } else if (c.bgk === 'vid' && c.video && c.video.readyState >= 2) {
+      plate(c.video, 0, 0, c.video.videoWidth, c.video.videoHeight, pl);
+    } else if (c.bgk !== 'none') {
+      const f = c.files.find(x => x.bg && x.img); if (f) plate(f.img, 0, 0, f.img.width, f.img.height, pl);
+    }
+    if (portrait && c.bgk !== 'none' && !o.nofade) fadeEdges(pl, a);
+    const sv = cl(keyed(c.beats, 's', p, 0), 0, c.states.length - 1), i0 = Math.floor(sv), fr = sv - i0;
+    const A = c.files[i0].img, B = c.files[Math.min(i0 + 1, c.states.length - 1)].img;
+    ctx.globalAlpha = a;
+    if (A) plate(A, 0, 0, A.width, A.height, pl);
+    if (B && fr > 0.01) { ctx.globalAlpha = a * fr; plate(B, 0, 0, B.width, B.height, pl); }
+    ctx.globalAlpha = a;
+    return {pl};
+  }
+  function fadeEdges(pl, a) {
+    const top = pl.oy, bot = pl.oy + FH * pl.s, ph = bot - top;
+    ctx.globalAlpha = a;
+    const fb = Math.min(ph * 0.16, H * 0.1);
+    if (bot < H + 2) { const g = ctx.createLinearGradient(0, bot - fb, 0, bot); g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, '#fff'); ctx.fillStyle = g; ctx.fillRect(0, bot - fb, W, fb + 1); }
+    const ft = Math.min(ph * 0.1, H * 0.06);
+    if (top > -2) { const g = ctx.createLinearGradient(0, top, 0, top + ft); g.addColorStop(0, '#fff'); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.fillRect(0, top - 1, W, ft + 1); }
+  }
+  function rrect(x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
+
+  // ---------- feed: el día completo ----------
+  function gridLayout(c) {
+    const n = c.cells.length, cols = 3, rows = Math.ceil(n / cols);
+    const gap = portrait ? 8 : 16, lab = portrait ? 0 : 26;
+    let cw = portrait ? (W - 32 - gap * 2) / 3 : Math.min((W * 0.8 - gap * 2) / 3, ((H * 0.66 - gap * 2) / rows - lab) * 16 / 9);
+    const ch = cw * 9 / 16, gw = cw * cols + gap * 2, gh = (ch + lab) * rows + gap * (rows - 1);
+    const x0 = (W - gw) / 2, y0 = portrait ? H * 0.3 - gh / 2 : (H - gh) / 2 + H * 0.06;
+    return c.cells.map((_, i) => ({x: x0 + (i % cols) * (cw + gap), y: y0 + Math.floor(i / cols) * (ch + lab + gap), w: cw, h: ch}));
+  }
+  function drawGrid(c, p, a, o) {
+    const L = gridLayout(c), skip = o.skip, ca = o.cellsAlpha === undefined ? 1 : o.cellsAlpha;
+    const k = 1 - 0.05 * sm((p - 0.3) / 0.4), fade = sm((p - 0.44) / 0.18);
+    ctx.save(); ctx.globalAlpha = 1; ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+    ctx.translate(W / 2, H / 2); ctx.scale(k, k); ctx.translate(-W / 2, -H / 2);
+    L.forEach((r, i) => {
+      const f = c.files[i];
+      const ai = (c.cells[i] === skip ? 1 : ca) * a * (1 - fade);
+      if (ai <= 0.003) return;
+      ctx.globalAlpha = ai;
+      if (c.cells[i] !== skip && f.img) {
+        ctx.save(); rrect(r.x, r.y, r.w, r.h, 14); ctx.clip(); ctx.drawImage(f.img, r.x, r.y, r.w, r.h); ctx.restore();
+      }
+      if (!portrait) { ctx.fillStyle = '#1d1d1f'; ctx.font = '600 14px Inter, -apple-system, sans-serif'; ctx.textBaseline = 'top'; ctx.fillText(c.labels[i], r.x + 2, r.y + r.h + 8); }
+    });
+    ctx.restore();
+    return L;
+  }
+
+  // ---------- transiciones ----------
+  function intoRect(A, pA, R, e, rad, focus) {
+    // A completo se encoge dentro del rectángulo R (recorte tipo "cover" centrado en el aparato)
+    const k = Math.max(R.w / W, R.h / H);
+    let F = [lerp(W / 2, focus[0], e), lerp(H / 2, focus[1], e)];
+    const hw = R.w / (2 * k), hh = R.h / (2 * k);
+    F = [cl(F[0], hw, W - hw), cl(F[1], hh, H - hh)];
+    ctx.save();
+    if (e > 0.02) { ctx.globalAlpha = 1; ctx.shadowColor = 'rgba(0,0,0,' + (0.18 * e).toFixed(3) + ')'; ctx.shadowBlur = 36 * e; ctx.shadowOffsetY = 10 * e; ctx.fillStyle = '#000'; rrect(R.x, R.y, R.w, R.h, rad); ctx.fill(); ctx.shadowColor = 'transparent'; }
+    rrect(R.x, R.y, R.w, R.h, rad); ctx.clip();
+    drawShot(A, pA, {nofade: true, xf: pl => ({s: pl.s * k, ox: R.x + R.w / 2 + (pl.ox - F[0]) * k, oy: R.y + R.h / 2 + (pl.oy - F[1]) * k})});
+    ctx.restore();
+  }
+  function focusOf(c, p) {
+    const P = ((SP[c.sid] || {}).pts || {}).screen; const pl = place(c, p);
+    return P ? toV(pl, P) : [W / 2, H / 2];
+  }
+  function drawTransition(tr, cpos) {
+    const {A, B, u, type} = tr, pA = (cpos - A.top) / A.h, pB = (cpos - B.top) / B.h;
+    let veil = 0;
+    if (type === 'x') { drawShot(A, pA); drawShot(B, pB, {alpha: sm(u)}); }
+    else if (type === 'dip') { drawShot(A, pA, {alpha: 1 - sm(u / 0.5)}); drawShot(B, pB, {alpha: sm((u - 0.5) / 0.5)}); }
+    else if (type === 'zx') {
+      const e = sm(u);
+      drawShot(A, pA, {xf: pl => scaleAbout(pl, 1 + 0.06 * e, W / 2, H / 2)});
+      if (B.time) { veil = Math.sin(Math.PI * cl(u, 0, 1)); ctx.globalAlpha = Math.min(1, veil * 1.05); ctx.fillStyle = B.text === 'white' ? '#000' : '#fff'; ctx.fillRect(0, 0, W, H); }
+      drawShot(B, pB, {alpha: sm((u - (B.time ? 0.35 : 0)) / (B.time ? 0.65 : 1)), xf: pl => scaleAbout(pl, 0.95 + 0.05 * e, W / 2, H / 2)});
+      if (B.time) { ctx.globalAlpha = Math.min(1, veil * 1.05) * (1 - sm((u - 0.5) / 0.5)); ctx.fillStyle = B.text === 'white' ? '#000' : '#fff'; ctx.fillRect(0, 0, W, H); }
+    }
+    else if (type === 'portal' && portrait) { drawShot(A, pA, {alpha: 1 - sm(u / 0.5)}); drawShot(B, pB, {alpha: sm((u - 0.5) / 0.5)}); }
+    else if (type === 'portal') portal(A, pA, B, pB, u);
+    else if (type === 'notify') {
+      drawShot(B, pB, {alpha: sm(u / 0.5)});
+      const T = notifImg.getBoundingClientRect(), e = sm(u / 0.86);
+      if (u < 0.93) {
+        const R = {x: lerp(0, T.left, e), y: lerp(0, T.top, e), w: lerp(W, T.width, e), h: lerp(H, T.height, e)};
+        intoRect(A, pA, R, e, lerp(0, 12, e), focusOf(A, pA));
+      }
+    }
+    else if (type === 'feed') {
+      const L = drawGrid(B, pB, 1, {skip: A.sid, cellsAlpha: sm((u - 0.2) / 0.6)});
+      const idx = B.cells.indexOf(A.sid), e = sm(u / 0.9);
+      if (idx >= 0) {
+        const T = L[idx], k = 1 - 0.05 * sm((pB - 0.3) / 0.4);
+        const Tx = {x: W / 2 + (T.x - W / 2) * k, y: H / 2 + (T.y - H / 2) * k, w: T.w * k, h: T.h * k};
+        const R = {x: lerp(0, Tx.x, e), y: lerp(0, Tx.y, e), w: lerp(W, Tx.w, e), h: lerp(H, Tx.h, e)};
+        intoRect(A, pA, R, e, lerp(0, 14, e), focusOf(A, pA));
+      }
+    }
+    return veil;
+  }
+  function portal(A, pA, B, pB, u) {
+    const polyN = (SP[A.sid] || {}).scr;
+    if (!polyN) { drawShot(A, pA); drawShot(B, pB, {alpha: sm(u)}); return; }
+    const plA = place(A, pA), pts = polyN.map(q => toV(plA, q));
+    let cx = 0, cy = 0; pts.forEach(q => { cx += q[0]; cy += q[1]; }); cx /= pts.length; cy /= pts.length;
+    let rmin = 1e9; pts.forEach(q => { rmin = Math.min(rmin, Math.hypot(q[0] - cx, q[1] - cy)); });
+    const Zmax = 1.12 * Math.hypot(W, H) / 2 / rmin;
+    const e1 = sm(u / 0.86), Z = Math.exp(Math.log(Zmax) * e1);
+    const m = sm(u / 0.55), tx = lerp(cx, W / 2, m), ty = lerp(cy, H / 2, m);
+    drawShot(A, pA, {xf: pl => ({s: pl.s * Z, ox: tx + (pl.ox - cx) * Z, oy: ty + (pl.oy - cy) * Z})});
+    const P2 = pts.map(q => [tx + (q[0] - cx) * Z, ty + (q[1] - cy) * Z]);
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for (const [x, y] of P2) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    const R = {x: x0, y: y0, w: x1 - x0, h: y1 - y0};
+    const kc = Math.max(R.w / W, R.h / H), rel = sm((u - 0.55) / 0.4), k = lerp(kc, 1, rel);
+    const fx = lerp(R.x + R.w / 2, W / 2, rel), fy = lerp(R.y + R.h / 2, H / 2, rel);
+    ctx.save(); polyPath(P2); ctx.clip();
+    drawShot(B, pB, {alpha: sm((u - 0.04) / 0.24), nofade: true, xf: pl => ({s: pl.s * k, ox: fx + (pl.ox - W / 2) * k, oy: fy + (pl.oy - H / 2) * k})});
+    // vidrio: viñeta en el borde mientras la ventana es chica
+    const vg = 1 - sm((u - 0.35) / 0.3);
+    if (vg > 0.01) {
+      const rr = Math.max(R.w, R.h) / 2, g = ctx.createRadialGradient(R.x + R.w / 2, R.y + R.h / 2, rr * 0.55, R.x + R.w / 2, R.y + R.h / 2, rr);
+      g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.45)'); ctx.globalAlpha = vg; ctx.fillStyle = g; ctx.fillRect(R.x, R.y, R.w, R.h);
+    }
+    ctx.restore();
+  }
+
+  // ---------- estado por scroll ----------
+  let sy = scrollY, last = '', cposNow = 0;
+  function frameState(y) {
+    const cpos = y + H * 0.5, L = SEC.length - 1;
+    let k = 0; while (k < L && cpos >= SEC[k + 1].top) k++;
+    // entre tomas separadas por un bloque de página: atrás queda la toma que ya asoma
+    if (k < L && cpos >= SEC[k].top + SEC[k].h && SEC[k + 1].top - (SEC[k].top + SEC[k].h) >= 2 && SEC[k + 1].top < y + H + 2) k++;
+    const c = SEC[k];
+    const adjN = k < L && SEC[k + 1].top - (c.top + c.h) < 2, adjP = k > 0 && c.top - (SEC[k - 1].top + SEC[k - 1].h) < 2;
+    if (adjN) { const T = c.txlen * H / 100, b = SEC[k + 1].top; if (cpos > b - T / 2) return {k, cpos, tr: {A: c, B: SEC[k + 1], u: (cpos - (b - T / 2)) / T, type: c.tx}}; }
+    if (adjP) { const P = SEC[k - 1], T = P.txlen * H / 100; if (cpos < c.top + T / 2) return {k, cpos, tr: {A: P, B: c, u: (cpos - (c.top - T / 2)) / T, type: P.tx}}; }
+    return {k, cpos, a: 1};
+  }
+
+  // ---------- textos fijos ----------
+  const BASE = (b) => (portrait ? (b.el.classList.contains('mid') ? 'translate3d(0,-50%,0)' : 'translate3d(0,0,0)') : (b.pos === 'bl' || b.pos === 'tl') ? 'translate3d(0,0,0)' : b.side === 'c' ? (b.el.classList.contains('low') || b.el.classList.contains('top') ? 'translate3d(-50%,0,0)' : 'translate3d(-50%,-50%,0)') : 'translate3d(0,-50%,0)');
+  function updateBeats(st) {
+    let sv = 0, spos = 'l', stone = 'white';
+    const busy = {l: null, r: null};
+    for (const c of SEC) {
+      const near = Math.abs(c.k - st.k) <= 1, p = (st.cpos - c.top) / c.h;
+      for (const b of c.beats) {
+        let v = 0;
+        if (near && !b.empty) {
+          const f = 0.04, a0 = b.at - b.h, a1 = b.at + b.h;
+          v = p < a0 - f ? 0 : p < a0 ? sm((p - (a0 - f)) / f) : p <= a1 ? 1 : p < a1 + f ? 1 - sm((p - a1) / f) : 0;
+        }
+        if (b.flow) { const lp = cl((p - (b.at - b.h)) / (2 * b.h), 0, 1); const stg = String(Math.min(b.steps, Math.floor(lp * (b.steps + 0.6)))); if (b.flow.dataset.stage !== stg) b.flow.dataset.stage = stg; }
+        if (v > 0.02 && c.kind === 'scene' && c.bgk !== 'none' && !portrait) {
+          if (v > sv) { sv = v; spos = b.pos === 'c' ? 'l' : b.pos; stone = b.el.classList.contains('ink') ? 'ink' : 'white'; }
+        }
+        if (v > 0.05) busy[b.side === 'r' ? 'r' : b.side === 'c' ? 'c' : 'l'] = b;
+        if (Math.abs(v - b.vis) > 0.002 || (v > 0 && b.dirtyBase)) {
+          const dir = p < b.at ? 1 : -1;
+          b.el.style.opacity = v.toFixed(3);
+          b.el.style.visibility = v > 0.002 ? 'visible' : 'hidden';
+          b.el.style.transform = BASE(b) + ' translateY(' + ((1 - v) * 26 * dir).toFixed(1) + 'px)';
+          b.vis = v; b.dirtyBase = false;
+        }
+      }
+    }
+    const sc = 'scrim ' + spos + ' ' + stone; if (scrim.className !== sc) scrim.className = sc; scrim.style.opacity = sv.toFixed(3);
+    return busy;
+  }
+
+  // ---------- etiquetas de botones y sensores ----------
+  function pinPos(c, name, fi) {
+    if (c.kind === 'seq') {
+      const A = (FEAT[c.id] || {})[name]; if (!A) return null;
+      const i0 = cl(Math.floor(fi), 0, A.length - 1), i1 = Math.min(i0 + 1, A.length - 1), f = fi - i0;
+      return [lerp(A[i0][0], A[i1][0], f), lerp(A[i0][1], A[i1][1], f), lerp(A[i0][2], A[i1][2], f)];
+    }
+    const q = ((SP[c.sid] || {}).feat || {})[name]; return q || null;
+  }
+  function updatePins(layers, busy) {
+    const want = []; let bbv = null;
+    for (const L of layers) {
+      const c = L.c; if (!c.pins.length || !L.r || L.a < 0.05) continue;
+      const p = L.p, fi = L.r.fi || 0;
+      const BB = (D.bbox || {})[c.id];
+      if (BB) { const q = BB[cl(Math.round(fi), 0, BB.length - 1)]; const a = toV(L.r.pl, [q[0], q[1]]), b = toV(L.r.pl, [q[2], q[3]]); bbv = [a[0], a[1], b[0], b[1]]; }
+      for (const pn of c.pins) {
+        const q = pinPos(c, pn.name, fi); if (!q) continue;
+        const v = L.a * q[2] * Math.min(sm((p - pn.a) / 0.05), 1 - sm((p - pn.b) / 0.05));
+        if (v < 0.02) continue;
+        const [x, y] = toV(L.r.pl, q);
+        if (x < 8 || x > W - 8 || y < 60 || y > H - 8) continue;
+        want.push({name: pn.name, x, y, v, dir: pn.dir, dl: pn.dl});
+      }
+    }
+    if (want.length) {
+      const xs = want.map(w => w.x), minX = Math.min(...xs), maxX = Math.max(...xs), cxm = (minX + maxX) / 2;
+      const pad = portrait ? 18 : Math.max(38, W * 0.03);
+      let colL = minX - pad, colR = maxX + pad;
+      if (bbv) { colL = Math.min(colL, bbv[0] - pad * 0.6); colR = Math.max(colR, bbv[2] + pad * 0.6); }
+      const rb = (b) => (b ? b.el.getBoundingClientRect() : null);
+      const tl = rb(busy.l), trr = rb(busy.r), tc = rb(busy.c);
+      const leftLim = tl ? tl.right + 16 : 10, rightLim = trr ? trr.left - 16 : W - 10;
+      for (const w of want) {
+        const L = PIN[w.name] || [w.name, ''];
+        w.lw = portrait ? L[0].length * 7.4 + 6 : Math.max(L[0].length * 8.9, L[1].length * 6.7) + 6;
+        if (w.dir === 'u' || w.dir === 'd') { w.side = 0; w.lx = w.x; w.ly = w.y + (w.dir === 'u' ? -1 : 1) * (portrait ? 30 : (w.dl || 54) * Math.min(1, W / 1440)); continue; }
+        if (w.dir === 'l' || w.dir === 'r') {
+          w.side = w.dir === 'l' ? -1 : 1; const ln = portrait ? pad : (w.dl || pad);
+          if (w.side < 0 && w.x - ln - 8 - w.lw < 4) w.side = 1; else if (w.side > 0 && w.x + ln + 8 + w.lw > W - 4) w.side = -1;
+          w.lx = w.x + w.side * ln; w.ly = w.y; continue;
+        }
+        const lx = (sd) => (sd < 0 ? Math.min(w.x - pad, colL) : Math.max(w.x + pad, colR));
+        const ok = (sd) => (sd < 0 ? lx(sd) - 8 - w.lw > leftLim : lx(sd) + 8 + w.lw < rightLim);
+        let sd = w.x < cxm ? -1 : 1;
+        if (!ok(sd) && ok(-sd)) sd = -sd;
+        w.side = sd; w.lx = ok(sd) ? lx(sd) : w.x + sd * pad; w.ly = w.y;
+      }
+      const gap = portrait ? 22 : 44, low = tc && tc.top > H / 2, top0 = (tc && !low ? tc.bottom + 24 : 76), bot0 = (low ? tc.top - 22 : H - 24);
+      for (const sd of [-1, 1]) {
+        const g = want.filter(w => w.side === sd && !w.dir).sort((a, b) => a.ly - b.ly);
+        for (let i = 0; i < g.length; i++) { if (g[i].ly < top0) g[i].ly = top0; if (i && g[i].ly - g[i - 1].ly < gap) g[i].ly = g[i - 1].ly + gap; }
+        const over = g.length ? g[g.length - 1].ly - bot0 : 0;
+        if (over > 0) for (const w of g) w.ly -= over;
+      }
+    }
+    pinPool.forEach((P, i) => {
+      const w = want[i];
+      if (!w) { if (P.on) { P.el.style.opacity = 0; P.el.style.visibility = 'hidden'; P.on = false; } return; }
+      if (P.name !== w.name) { P.name = w.name; const L = PIN[w.name] || [w.name, '']; P.b.textContent = L[0]; P.sm.textContent = L[1]; }
+      P.on = true;
+      P.el.className = 'pin ' + (w.side < 0 ? 'left' : w.side > 0 ? 'right' : 'mid');
+      P.el.style.visibility = 'visible'; P.el.style.opacity = w.v.toFixed(3);
+      P.el.style.transform = 'translate3d(' + w.x.toFixed(1) + 'px,' + w.y.toFixed(1) + 'px,0)';
+      const dx = w.lx - w.x, dy = w.ly - w.y, d = Math.hypot(dx, dy);
+      P.line.style.width = d.toFixed(1) + 'px'; P.line.style.transform = 'rotate(' + Math.atan2(dy, dx).toFixed(4) + 'rad)';
+      P.lab.style.transform = w.side === 0 ? 'translate(calc(' + dx.toFixed(1) + 'px - 50%),calc(' + dy.toFixed(1) + 'px ' + (dy < 0 ? '- 100% - 6px' : '+ 6px') + '))' : w.side < 0 ? 'translate(calc(' + (dx - 8).toFixed(1) + 'px - 100%),calc(' + dy.toFixed(1) + 'px - 50%))' : 'translate(' + (dx + 8).toFixed(1) + 'px,calc(' + dy.toFixed(1) + 'px - 50%))';
+    });
+  }
+
+  // ---------- notificación y hora ----------
+  let notifKey = '';
+  function setNotif(c, op, thumbOp, slide) {
+    if (!c || op <= 0.002) { if (notif.style.visibility !== 'hidden') { notif.style.visibility = 'hidden'; notif.style.opacity = 0; } return; }
+    if (notifKey !== c.id) {
+      notifKey = c.id; notif.querySelector('strong').textContent = c.notif[0]; notif.querySelector('p').textContent = c.notif[1];
+      notifImg.src = 's/thumbs/' + c.thumb + '.jpg';
+    }
+    notif.style.visibility = 'visible'; notif.style.opacity = op.toFixed(3);
+    notif.style.transform = 'translate3d(-50%,' + (-slide * 140).toFixed(1) + 'px,0) scale(' + (0.96 + 0.04 * Math.min(1, op * 1.2)).toFixed(3) + ')';
+    notifImg.style.opacity = thumbOp.toFixed(3);
+  }
+  let timeKey = '';
+  function setTime(c, op) {
+    if (!c || op <= 0.002) { if (timecard.style.visibility !== 'hidden') { timecard.style.visibility = 'hidden'; timecard.style.opacity = 0; } return; }
+    if (timeKey !== c.id) { timeKey = c.id; timecard.querySelector('b').textContent = c.time; timecard.querySelector('span').textContent = c.timelabel; timecard.className = c.text === 'white' ? 'white' : ''; }
+    timecard.style.visibility = 'visible'; timecard.style.opacity = op.toFixed(3);
+    timecard.style.transform = 'translate(-50%,-50%) scale(' + (0.96 + 0.04 * op).toFixed(3) + ')';
+  }
+
+  // ---------- render ----------
+  function render() {
+    const target = scrollY;
+    sy = reduce ? target : sy + (target - sy) * 0.2;
+    if (Math.abs(target - sy) < 0.4) sy = target;
+    const st = frameState(sy); cposNow = st.cpos;
+    if (st.k !== cur) {
+      cur = st.k; pump();
+      SEC.forEach((c, i) => { if (c.video) { if (Math.abs(i - cur) <= 1) { const pr = c.video.play(); if (pr && pr.catch) pr.catch(() => {}); } else c.video.pause(); } });
+    }
+    // portada: negro -> blanco
+    const c0 = SEC[0], t0 = st.k === 0 ? seqT(c0, (st.cpos - c0.top) / c0.h) : 1;
+    const lit = st.k > 0 ? 1 : sm((t0 - 0.6) / 0.22), vv = Math.round(255 * lit);
+    wrap.style.background = 'rgb(' + vv + ',' + vv + ',' + vv + ')';
+    const curC = SEC[st.k];
+    const inShot = st.cpos >= curC.top && st.cpos < curC.top + curC.h - H * 0.15;
+    root.classList.toggle('dark', lit < 0.5 || (curC.navdark && inShot && !(st.tr && st.tr.B !== curC && st.tr.u > 0.5)));
+    herocap.style.opacity = st.k === 0 ? (1 - sm(t0 / 0.1)).toFixed(3) : 0;
+
+    const anyVideo = SEC.some(c => c.video && Math.abs(c.k - st.k) <= 1 && c.video.readyState >= 2 && !c.video.paused);
+    const key = st.k + ':' + st.cpos.toFixed(1) + ':' + W + 'x' + H;
+    if (key !== last || dirty || anyVideo) {
+      last = key; dirty = false;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; ctx.globalCompositeOperation = 'source-over';
+      const layers = [];
+      let veil = 0, notifC = null, nOp = 0, nThumb = 0, nSlide = 0, timeC = null;
+      if (st.tr) {
+        const {A, B, u, type} = st.tr;
+        veil = drawTransition(st.tr, st.cpos) || 0;
+        const pA = (st.cpos - A.top) / A.h, pB = (st.cpos - B.top) / B.h;
+        if (type === 'x' || type === 'zx' || type === 'dip') {
+          const aA = type === 'dip' ? 1 - sm(u / 0.5) : 1 - sm(u), aB = type === 'dip' ? sm((u - 0.5) / 0.5) : sm(u);
+          layers.push({c: A, p: pA, a: aA, r: {pl: place(A, pA), fi: A.kind === 'seq' ? seqT(A, pA) * (A.n - 1) : 0}});
+          layers.push({c: B, p: pB, a: aB, r: {pl: place(B, pB), fi: B.kind === 'seq' ? seqT(B, pB) * (B.n - 1) : 0}});
+        }
+        if (type === 'zx' && B.time) timeC = B;
+        if (type === 'notify') { notifC = A; nOp = sm((u - 0.6) / 0.16); nThumb = sm((u - 0.8) / 0.1); }
+      } else {
+        const c = SEC[st.k], p = (st.cpos - c.top) / c.h;
+        const r = drawShot(c, p, {alpha: st.a});
+        layers.push({c, p, a: st.a, r});
+        // la notificación sigue un momento sobre la escena siguiente y luego se va
+        const P = SEC[st.k - 1];
+        if (P && P.tx === 'notify' && c.top - (P.top + P.h) < 2 && p < 0.34) { notifC = P; nOp = 1 - sm((p - 0.22) / 0.1); nThumb = 1; nSlide = sm((p - 0.2) / 0.12); }
+      }
+      ctx.globalAlpha = 1;
+      setNotif(notifC, nOp, nThumb, nSlide);
+      setTime(timeC, timeC ? sm(veil * 1.6 - 0.35) : 0);
+      // señal inalámbrica
+      let pulseAt = null, pulseTone = 'ink';
+      for (const L of layers) {
+        const c = L.c; if (c.kind !== 'scene' || !L.r || !L.r.pl) continue;
+        for (const b of c.beats) if (b.pulse && Math.abs(L.p - b.at) < b.h + 0.03) {
+          const q = ((SP[c.sid] || {}).pts || {})[b.pulse]; if (!q) continue;
+          const [x, y] = toV(L.r.pl, q);
+          pulseAt = [x, y, L.a * (1 - sm((Math.abs(L.p - b.at) - b.h + 0.01) / 0.04))]; pulseTone = c.text;
+        }
+      }
+      pulse.classList.toggle('ink', pulseTone === 'ink');
+      if (pulseAt && pulseAt[2] > 0.02) { pulse.style.transform = 'translate3d(' + pulseAt[0].toFixed(1) + 'px,' + pulseAt[1].toFixed(1) + 'px,0)'; pulse.style.opacity = pulseAt[2].toFixed(3); }
+      else pulse.style.opacity = 0;
+      const busy = updateBeats(st);
+      updatePins(layers, busy);
+      callouts(layers);
+    }
+    requestAnimationFrame(render);
+  }
+  function callouts(layers) {
+    let shown = false;
+    for (const L of layers) {
+      const rows = CALL[L.c.id]; if (!rows || !rows.length || !L.r) continue;
+      const t = seqT(L.c, L.p), i = Math.round(t * (L.c.n - 1)), row = rows[Math.min(i, rows.length - 1)];
+      let v = L.c.id === 'c10' ? sm((t - 0.55) / 0.3) : L.c.id === 'c12' ? 1 - sm((t - 0.1) / 0.3) : 1;
+      v *= L.a; if (v < 0.02) continue;
+      const g = L.c.id === 'c11' ? GROUPS[Math.min(3, Math.floor(t * 4))] : [];
+      row.forEach(([x, y], j) => {
+        const el = tags[j], q = toV(L.r.pl, [x, y]);
+        el.style.transform = 'translate3d(' + q[0].toFixed(1) + 'px,' + q[1].toFixed(1) + 'px,0)';
+        el.style.opacity = (v * (g.length && !g.includes(j) ? 0.55 : 1)).toFixed(3);
+        el.classList.toggle('hot', g.includes(j));
+      });
+      shown = true; break;
+    }
+    if (!shown) tags.forEach(el => { el.style.opacity = 0; });
+  }
+
+  // ---------- pruébalo: toca un control y mira qué hace ----------
+  (function play() {
+    const PL = D.play, dev = $('#playdev'); if (!PL || !dev) return;
+    dev.style.setProperty('--ar', PL.ar);
+    const ring = $('#playring'), out = $('.play-out'), modesEl = $('#playmodes'), chipsEl = $('#playchips');
+    const IM = {};
+    PL.states.forEach(st => { const im = new Image(); im.alt = ''; im.decoding = 'async'; im.src = 's/play/' + st + '.webp'; if (st === 'base') im.className = 'on'; dev.insertBefore(im, ring); IM[st] = im; });
+    const CT = [
+      {id: 'ring', name: 'Aro', pt: 'ring', modes: [
+        {st: ['clima'], h: 'El clima, antes de salir.', say: 'Gira el aro.', res: 'Temperatura, máxima y mínima del día.', tag: 'Clima'},
+        {st: ['cal'], h: 'Tu agenda, de un vistazo.', say: 'Gira otra vez.', res: 'Tus próximas citas y un anillo con tu día.', tag: 'Agenda'},
+        {st: ['mail'], h: 'Tu correo, sin sacar el teléfono.', say: 'Y una vez más.', res: 'Lo importante, primero.', tag: 'Correo'}]},
+      {id: 'm1', name: 'M1', pt: 'm1', modes: [{st: ['m1a', 'm1b'], h: 'Tu reporte semanal, enviado.', say: '«Haz el reporte con mi calendario y mándalo a mis socios y al equipo.»', res: 'Enviado a 6 personas · 2 páginas'}]},
+      {id: 'm2', name: 'M2', pt: 'm2', modes: [{st: ['m2'], h: 'Tu día, lo urgente primero.', say: '«¿Qué tengo hoy?»', res: 'Te lo lee en voz alta por sus bocinas.'}]},
+      {id: 'rec', name: 'REC', pt: 'rec', modes: [{st: ['rec', 'rec2'], h: 'La minuta, lista al terminar.', say: '«Escucha la junta y manda la minuta.»', res: '4 acuerdos · 3 tareas con responsable'}]},
+      {id: 'ia', name: 'IA', pt: 'ia', modes: [{st: ['ask'], h: 'Pregúntale lo que sea.', say: '«¿Cuánto vendimos esta semana?»', res: 'Te responde en voz y en pantalla.'}]},
+      {id: 'knob', name: 'Knob', pt: 'knob', modes: [
+        {st: ['sec'], h: 'Vigila tu escritorio.', say: '«Avísame si alguien toca mis cosas.»', res: '«Alguien con gorra negra tomó las tijeras.»', tag: 'Seguridad'},
+        {st: ['leak'], h: 'Ve el calor detrás del muro.', say: '«Busca fugas en esta pared.»', res: 'Fuga probable: +6,8 °C', tag: 'Térmica'},
+        {st: ['gym'], h: 'Cuenta tus repeticiones.', say: '«Mírame hacer 10 lagartijas.»', res: 'Once. Una de más.', tag: 'Entrenamiento'},
+        {st: ['dog'], h: 'Cuida tu casa.', say: '«Que Max no se coma el desayuno.»', res: 'Luz roja y «¡Max, no!» por la bocina.', tag: 'Casa'}]},
+      {id: 'trig', name: 'Disparo', pt: 'trigger', modes: [{st: ['sosA', 'sosB'], h: 'SOS, cuando más lo necesitas.', say: 'Abres la tapa y lo mantienes tres segundos.', res: 'Tu ubicación sale con el GPS de tu teléfono.'}]},
+    ];
+    let active = null, timer = 0;
+    const show = (st) => { for (const k in IM) IM[k].classList.toggle('on', k === st); };
+    const setOut = (c, m, idle) => {
+      out.classList.add('swap');
+      setTimeout(() => {
+        out.querySelector('.po-ctl').textContent = c; out.querySelector('.po-h').textContent = m.h;
+        out.querySelector('.po-say').textContent = m.say || ''; out.querySelector('.po-res').textContent = m.res || '';
+        out.classList.toggle('idle', !!idle); out.classList.remove('swap');
+      }, 160);
+    };
+    CT.forEach(c => {
+      c.i = -1;
+      const q = PL.pts[c.pt] || PL.pts.cover;
+      if (q) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'hs'; b.style.left = (q[0] * 100).toFixed(2) + '%'; b.style.top = (q[1] * 100).toFixed(2) + '%';
+        b.setAttribute('aria-label', c.name); b.innerHTML = '<span></span>'; b.querySelector('span').textContent = c.name;
+        b.addEventListener('click', () => press(c)); dev.appendChild(b); c.hs = b; c.q = q;
+      }
+      const ch = document.createElement('button'); ch.type = 'button'; ch.className = 'chip'; ch.textContent = c.name;
+      ch.addEventListener('click', () => press(c)); chipsEl.appendChild(ch); c.chip = ch;
+    });
+    function press(c) {
+      c.i = (active === c) ? (c.i + 1) % c.modes.length : Math.max(c.i, 0);
+      active = c;
+      const m = c.modes[c.i];
+      CT.forEach(o => { if (o.hs) o.hs.classList.toggle('on', o === c); o.chip.classList.toggle('on', o === c); });
+      clearTimeout(timer); show(m.st[0]);
+      if (m.st[1]) timer = setTimeout(() => show(m.st[1]), 1300);
+      if (c.q) { ring.style.left = (c.q[0] * 100) + '%'; ring.style.top = (c.q[1] * 100) + '%'; ring.classList.remove('go'); void ring.offsetWidth; ring.classList.add('go'); }
+      setOut(c.name + (m.tag ? ' · ' + m.tag : ''), m);
+      modesEl.innerHTML = c.modes.length > 1 ? c.modes.map((x, j) => (j === c.i ? '<b>' + x.tag + '</b>' : x.tag)).join(' · ') + (c.id === 'knob' ? ' — gíralo para cambiar' : ' — gíralo para seguir') : '';
+    }
+    setOut('Empieza aquí', {h: 'Los puntos son sus controles.', say: '', res: 'Tócalos, o usa los botones de abajo.'}, true);
+  })();
+
+  // ---------- reservas ----------
+  (function reservas() {
+    const f = $('#rform'); if (!f) return;
+    const API = 'https://htjwhmsqjbdepnwmijfc.supabase.co/rest/v1/rpc/meier1_reservar', KEY = 'sb_publishable_Ir7BgAsgpYyo4QIJlkxiIw_ot6TlAVK';
+    const msg = $('#rmsg'), btn = f.querySelector('button');
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const v = (n) => (f.elements[n].value || '').trim();
+      if (v('web')) return;
+      const nombre = v('nombre'), correo = v('correo');
+      f.elements.nombre.setAttribute('aria-invalid', nombre.length < 2); f.elements.correo.setAttribute('aria-invalid', !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(correo));
+      if (nombre.length < 2) { msg.textContent = 'Escribe tu nombre.'; f.elements.nombre.focus(); return; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(correo)) { msg.textContent = 'Revisa tu correo.'; f.elements.correo.focus(); return; }
+      btn.disabled = true; msg.textContent = '';
+      const origen = (location.search + ' ' + (document.referrer || '')).trim().slice(0, 300);
+      try {
+        const r = await fetch(API, {method: 'POST', headers: {'apikey': KEY, 'Content-Type': 'application/json'},
+          body: JSON.stringify({p_nombre: nombre, p_correo: correo, p_ciudad: v('ciudad') || null, p_uso: v('uso') || null, p_origen: origen || null})});
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.ok) throw new Error(j.error || r.status);
+        f.hidden = true; const d = $('#rdone'); d.querySelector('h3').textContent = 'Listo, ' + nombre.split(' ')[0] + '. Tu MEIER1 está apartado.'; d.hidden = false;
+      } catch (err) {
+        msg.textContent = 'No se pudo enviar. Revisa tu conexión e inténtalo de nuevo.'; btn.disabled = false;
+      }
+    });
+  })();
+  addEventListener('resize', () => { measure(); SEC.forEach(c => c.beats.forEach(b => { b.dirtyBase = true; })); });
+  addEventListener('load', measure);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+  measure(); pump(); requestAnimationFrame(render);
+})();
+</script>
+
+</body>
+</html>
