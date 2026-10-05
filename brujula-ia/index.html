@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Brújula IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+  html{color-scheme:light}
+  :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  html,body{margin:0}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+
+  /* Layout: ruta vertical de capítulos; arriba saludo + anillo de avance + clase en vivo */
+  /* Paleta: rosa cálido sobre tinta ciruela, acento oro rosado */
+  :root{
+    --bg:#fbf1f3; --surface:#ffffff; --surface-2:#fdf4f6;
+    --ink:#3a1f2b; --muted:#8a6472; --line:#f0dde3;
+    --brand:#c23a6b; --brand-soft:#fbe0e9; --accent:#d99a5b; --accent-soft:#f8ead8;
+    --lock:#c7adb5;
+    --shadow:0 1px 2px rgba(58,31,43,.05), 0 8px 24px rgba(194,58,107,.08);
+    --radius:18px;
+    --f-display:"Fraunces",Georgia,serif;
+    --f-body:"Hanken Grotesk",system-ui,-apple-system,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#1a1016; --surface:#241620; --surface-2:#2d1c27;
+    --ink:#f6e7ed; --muted:#c29aa8; --line:#3a2530;
+    --brand:#f07aa3; --brand-soft:#3a2029; --accent:#e5b07e; --accent-soft:#38281b;
+    --lock:#6e4e5a;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.4);
+    color-scheme:dark;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#1a1016; --surface:#241620; --surface-2:#2d1c27;
+    --ink:#f6e7ed; --muted:#c29aa8; --line:#3a2530;
+    --brand:#f07aa3; --brand-soft:#3a2029; --accent:#e5b07e; --accent-soft:#38281b;
+    --lock:#6e4e5a;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.4);
+    color-scheme:dark;
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--f-body);line-height:1.55;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:var(--f-display);font-weight:500;text-wrap:balance;margin:0;line-height:1.14}
+  p{margin:0}
+  button{font-family:inherit;cursor:pointer}
+  a{color:inherit}
+  .wrap{max-width:720px;margin:0 auto;padding-inline:20px;padding-block:0}
+
+  /* Header */
+  header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;
+    background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line)}
+  .bar-in{max-width:720px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:12px}
+  .logo{display:flex;align-items:center;gap:9px;font-family:var(--f-display);font-weight:600;font-size:1.05rem;letter-spacing:.2px}
+  .logo svg{width:22px;height:22px;color:var(--brand)}
+  .bar-spacer{flex:1}
+  .mini-prog{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);font-weight:600}
+  .mini-track{width:56px;height:6px;border-radius:999px;background:var(--line);overflow:hidden}
+  .mini-fill{height:100%;background:var(--brand);border-radius:999px;transition:width .5s ease}
+  .theme-btn{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--muted)}
+  .theme-btn svg{width:17px;height:17px}
+
+  /* Hero */
+  .hero{display:grid;grid-template-columns:1fr auto;gap:22px;align-items:center;
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px;box-shadow:var(--shadow);margin-top:24px}
+  .eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.68rem;font-weight:700;color:var(--brand)}
+  .hero h1{font-size:1.9rem;margin:8px 0 6px}
+  .hero p{color:var(--muted);font-size:.95rem;max-width:34ch}
+  .hero-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .btn-primary{display:inline-flex;align-items:center;gap:8px;background:var(--brand);color:#fff;border:none;border-radius:12px;padding:11px 18px;font-weight:600;font-size:.92rem}
+  .btn-primary svg{width:16px;height:16px}
+  .btn-soft{display:inline-flex;align-items:center;gap:8px;background:var(--brand-soft);color:var(--brand);border:none;border-radius:12px;padding:11px 16px;font-weight:600;font-size:.92rem}
+  .btn-soft svg{width:16px;height:16px}
+  .ring{position:relative;width:118px;height:118px;flex:none}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .rtrack{stroke:var(--line)}
+  .ring .rfill{stroke:var(--brand);stroke-linecap:round;transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1)}
+  .ring .rcenter{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+  .ring .rnum{font-family:var(--f-display);font-size:1.7rem;font-weight:600;line-height:1}
+  .ring .rlbl{font-size:.64rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:3px;font-weight:700}
+  @media(max-width:460px){.hero{grid-template-columns:1fr}.ring{justify-self:center}}
+
+  /* Empieza aquí */
+  .start{display:flex;gap:16px;align-items:flex-start;background:linear-gradient(135deg,var(--accent-soft),var(--surface));
+    border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:var(--radius);padding:20px;margin-top:16px;
+    text-align:left;width:100%;box-shadow:var(--shadow);transition:transform .14s ease}
+  .start:hover{transform:translateY(-2px)}
+  .start-ico{width:46px;height:46px;border-radius:13px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;color:var(--accent);flex:none}
+  .start-ico svg{width:24px;height:24px}
+  .start-body{flex:1;min-width:0}
+  .start .k{font-size:.68rem;text-transform:uppercase;letter-spacing:.11em;color:color-mix(in srgb,var(--accent) 55%,var(--ink));font-weight:700}
+  .start h3{font-size:1.15rem;margin:3px 0 4px}
+  .start p{font-size:.86rem;color:var(--muted)}
+  .start .go{align-self:center;color:var(--muted);opacity:.6}
+  .start .go svg{width:18px;height:18px}
+
+  /* Live session */
+  .live{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    background:linear-gradient(135deg,var(--brand-soft),var(--surface-2));
+    border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-top:16px}
+  .live-ico{width:44px;height:44px;border-radius:12px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;color:var(--brand);flex:none}
+  .live-ico svg{width:22px;height:22px}
+  .live-txt{flex:1;min-width:150px}
+  .live-txt .k{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700}
+  .live-txt .v{font-family:var(--f-display);font-size:1.12rem;font-weight:500;margin-top:2px}
+  .live-txt .s{font-size:.8rem;color:var(--muted);margin-top:2px}
+  .join{display:inline-flex;align-items:center;gap:7px;text-decoration:none;background:var(--accent);color:#231a07;border-radius:11px;padding:10px 16px;font-weight:700;font-size:.88rem;white-space:nowrap}
+  .join svg{width:15px;height:15px}
+
+  .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:34px 4px 14px}
+  .sec-head h2{font-size:1.3rem}
+  .sec-head span{font-size:.8rem;color:var(--muted);font-weight:600}
+
+  /* Ruta */
+  .ruta{display:flex;flex-direction:column;gap:10px;padding-left:4px}
+  .node{position:relative;display:flex;gap:16px;align-items:stretch;width:100%;text-align:left;
+    background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow);
+    transition:transform .14s ease,border-color .14s ease}
+  .node:hover:not(.locked){transform:translateY(-2px);border-color:var(--brand)}
+  .node.locked{opacity:.62;cursor:default;box-shadow:none}
+  .node.current{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-soft),var(--shadow)}
+  .marker{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+    font-family:var(--f-display);font-weight:600;font-size:1.05rem;background:var(--surface-2);border:2px solid var(--line);color:var(--muted)}
+  .node.done .marker{background:var(--brand);border-color:var(--brand);color:#fff}
+  .node.current .marker{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
+  .marker svg{width:19px;height:19px}
+  .node-body{flex:1;min-width:0}
+  .node-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .node h3{font-size:1.05rem;font-weight:600}
+  .chip{font-size:.64rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700;padding:3px 8px;border-radius:999px}
+  .chip.current{background:var(--brand-soft);color:var(--brand)}
+  .chip.done{background:transparent;color:var(--muted)}
+  .chip.lock{background:transparent;color:var(--lock)}
+  .node p.desc{font-size:.86rem;color:var(--muted);margin-top:4px}
+  .node .go{flex:none;align-self:center;color:var(--muted);opacity:.6}
+  .node .go svg{width:18px;height:18px}
+  .node.locked .go{display:none}
+
+  footer{text-align:center;color:var(--muted);font-size:.74rem;margin:40px 0 48px;line-height:1.6}
+
+  /* Overlay / sheet de capítulo */
+  .overlay{position:fixed;inset:0;z-index:50;display:none;align-items:flex-end;justify-content:center;background:rgba(26,16,22,.5);backdrop-filter:blur(2px)}
+  .overlay.open{display:flex}
+  .sheet{background:var(--bg);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;border-radius:22px 22px 0 0;border:1px solid var(--line);border-bottom:none;animation:rise .32s cubic-bezier(.2,.8,.2,1)}
+  @media(min-width:560px){.overlay{align-items:center;padding:24px}.sheet{border-radius:22px;border-bottom:1px solid var(--line)}}
+  @keyframes rise{from{transform:translateY(24px);opacity:.4}to{transform:translateY(0);opacity:1}}
+  @media(prefers-reduced-motion:reduce){.sheet{animation:none}}
+  .sheet-in{padding:26px 24px 30px}
+  .sheet-close{position:sticky;top:0;float:right;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--muted);display:grid;place-items:center;margin:-6px -4px 0 0;z-index:2}
+  .sheet-close svg{width:16px;height:16px}
+  .sheet .num{font-family:var(--f-display);font-size:.8rem;color:var(--brand);font-weight:600;letter-spacing:.04em}
+  .sheet h2{font-size:1.5rem;margin:6px 0 10px;padding-right:40px}
+  .sheet .lead{color:var(--ink);font-size:.98rem;line-height:1.6}
+  .block{margin-top:24px}
+  .block .label{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:10px}
+
+  .learn{display:flex;flex-direction:column;gap:9px}
+  .learn li{list-style:none;display:flex;gap:10px;font-size:.92rem;align-items:flex-start}
+  .learn li svg{width:17px;height:17px;color:var(--brand);flex:none;margin-top:3px}
+
+  /* Paso a paso */
+  .pasos{display:flex;flex-direction:column;gap:0}
+  .paso{display:flex;gap:14px;padding-bottom:16px;position:relative}
+  .paso:not(:last-child)::before{content:"";position:absolute;left:14px;top:30px;bottom:0;width:2px;background:var(--line)}
+  .paso-n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:700;font-size:.82rem;z-index:1}
+  .paso-tx{flex:1;min-width:0;font-size:.9rem;padding-top:3px}
+  .paso-tx b{font-weight:600}
+
+  /* Receta de prompts */
+  .receta{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .receta-row{display:grid;grid-template-columns:92px 1fr;gap:12px;background:var(--surface);padding:12px 14px}
+  .receta-row .rk{font-family:var(--f-display);font-weight:600;color:var(--brand);font-size:.95rem}
+  .receta-row .rv{min-width:0}
+  .receta-row .rv .what{font-size:.82rem;font-weight:600}
+  .receta-row .rv .ex{font-size:.82rem;color:var(--muted);margin-top:2px;font-style:italic}
+
+  /* Prompts copiables */
+  .prompt{position:relative;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:13px 44px 13px 14px;font-size:.86rem;line-height:1.5;margin-bottom:9px}
+  .prompt .copy{position:absolute;top:9px;right:9px;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted);display:grid;place-items:center}
+  .prompt .copy svg{width:15px;height:15px}
+  .prompt .copy.ok{color:var(--brand);border-color:var(--brand)}
+  .prompt-hint{font-size:.76rem;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .prompt-hint svg{width:14px;height:14px;color:var(--brand)}
+
+  .exercise{background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:14px;padding:16px}
+  .exercise .label{color:color-mix(in srgb,var(--accent) 60%,var(--ink));margin-bottom:6px}
+  .exercise p{font-size:.92rem}
+
+  .reto{background:var(--brand-soft);border:1px solid color-mix(in srgb,var(--brand) 30%,transparent);border-radius:14px;padding:16px;display:flex;gap:12px;align-items:flex-start}
+  .reto svg{width:22px;height:22px;color:var(--brand);flex:none;margin-top:1px}
+  .reto .label{color:var(--brand);margin-bottom:5px}
+  .reto p{font-size:.92rem}
+
+  /* Recursos */
+  .recursos{display:flex;flex-direction:column;gap:9px}
+  .recurso{display:flex;gap:12px;align-items:center;text-decoration:none;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;transition:border-color .14s ease}
+  .recurso:hover{border-color:var(--brand)}
+  .recurso-ico{width:34px;height:34px;border-radius:9px;flex:none;display:grid;place-items:center}
+  .recurso-ico svg{width:17px;height:17px}
+  .recurso-ico.video{background:var(--brand-soft);color:var(--brand)}
+  .recurso-ico.blog{background:var(--accent-soft);color:color-mix(in srgb,var(--accent) 65%,var(--ink))}
+  .recurso-ico.curso{background:var(--brand-soft);color:var(--brand)}
+  .recurso-ico.doc{background:var(--surface-2);color:var(--muted)}
+  .recurso-tx{flex:1;min-width:0}
+  .recurso-tx .rt{font-size:.88rem;font-weight:600;line-height:1.3}
+  .recurso-tx .rs{font-size:.74rem;color:var(--muted);margin-top:1px;display:flex;align-items:center;gap:5px}
+  .recurso-tx .rs .tag{text-transform:uppercase;letter-spacing:.06em;font-weight:700;font-size:.62rem;color:var(--brand)}
+  .recurso .ext{color:var(--muted);opacity:.6;flex:none}
+  .recurso .ext svg{width:15px;height:15px}
+
+  .notes{width:100%;margin-top:8px;min-height:80px;resize:vertical;font-family:inherit;font-size:.9rem;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:12px;line-height:1.5}
+  .notes:focus-visible{outline:2px solid var(--brand);outline-offset:1px;border-color:var(--brand)}
+  .saved{font-size:.72rem;color:var(--brand);margin-top:6px;height:1em;opacity:0;transition:opacity .2s}
+  .saved.show{opacity:1}
+  .sheet-actions{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap}
+  .btn-done{flex:1;min-width:180px;background:var(--brand);color:#fff;border:none;border-radius:13px;padding:13px;font-weight:700;font-size:.95rem;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+  .btn-done svg{width:17px;height:17px}
+  .btn-done.is-done{background:var(--brand-soft);color:var(--brand)}
+  .btn-ghost{background:var(--surface);color:var(--muted);border:1px solid var(--line);border-radius:13px;padding:13px 18px;font-weight:600;font-size:.9rem}
+
+  :focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+</style>
+</head>
+<body>
+
+
+<header class="bar">
+  <div class="bar-in">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.2 7.8 14.1 14.1 7.8 16.2 9.9 9.9 16.2 7.8" fill="currentColor" stroke="none"/></svg>
+      Brújula IA
+    </div>
+    <div class="bar-spacer"></div>
+    <div class="mini-prog"><span id="miniPct">0%</span><div class="mini-track"><div class="mini-fill" id="miniFill" style="width:0%"></div></div></div>
+    <button class="theme-btn" id="themeBtn" aria-label="Cambiar tema"></button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="hero">
+    <div>
+      <div class="eyebrow">Tu ruta de aprendizaje</div>
+      <h1>Aprende a usar la IA, paso a paso</h1>
+      <p>Empiezas desde cero y a tu ritmo. Cada capítulo te deja algo que puedes usar ese mismo día.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" id="continueBtn">
+          Continuar
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="ring" aria-hidden="true">
+      <svg width="118" height="118" viewBox="0 0 118 118">
+        <circle class="rtrack" cx="59" cy="59" r="52" fill="none" stroke-width="10"/>
+        <circle class="rfill" id="ringFill" cx="59" cy="59" r="52" fill="none" stroke-width="10" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+      </svg>
+      <div class="rcenter"><div class="rnum" id="ringNum">0<span style="font-size:.9rem;color:var(--muted)">/8</span></div><div class="rlbl">capítulos</div></div>
+    </div>
+  </section>
+
+  <button class="start" id="startBtn">
+    <div class="start-ico">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="3"/></svg>
+    </div>
+    <div class="start-body">
+      <div class="k">Nunca has usado una IA</div>
+      <h3>Empieza aquí</h3>
+      <p>5 minutos para entender qué es todo esto, abrir tu cuenta y mandar tu primer mensaje. Sin miedo.</p>
+    </div>
+    <div class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></div>
+  </button>
+
+  <section class="live">
+    <div class="live-ico">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+    </div>
+    <div class="live-txt">
+      <div class="k">Próxima clase en vivo</div>
+      <div class="v">Jueves · 8:00 pm</div>
+      <div class="s">Capítulo 1 · Primer contacto — nos vemos por videollamada</div>
+    </div>
+    <a class="join" id="joinBtn" href="https://meet.google.com/" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l5-3v10l-5-3"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg>
+      Entrar
+    </a>
+  </section>
+
+  <div class="sec-head">
+    <h2>Los 8 capítulos</h2>
+    <span id="progLabel">0 de 8 completados</span>
+  </div>
+
+  <div class="ruta" id="ruta"></div>
+
+  <footer>
+    Brújula IA · tu ruta para aprender inteligencia artificial<br>
+    ¿Te atoras? Anota la duda en el capítulo y la ves con Pablo en la clase en vivo.
+  </footer>
+</div>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="ovTitle">
+  <div class="sheet"><div class="sheet-in" id="sheetIn"></div></div>
+</div>
+
+<script>
+/* ===================== CONTENIDO ===================== */
+const EMPIEZA = {
+  t:"Empieza aquí",
+  d:"Lo mínimo para arrancar con confianza, aunque nunca hayas tocado una IA.",
+  lead:"Una IA como Claude o ChatGPT es como un asistente muy leído con el que platicas escribiendo. Le pides algo en español normal y te responde. No necesitas saber de computación ni de programación: si sabes mandar un WhatsApp, puedes usarla. Aquí vas a aprender a sacarle el jugo, sin prisa.",
+  pasos:[
+    "<b>Abre tu cuenta.</b> Entra a claude.ai desde tu navegador (Chrome, Edge, el que uses). Regístrate con tu correo. La cuenta más económica es más que suficiente para practicar todo este curso.",
+    "<b>Conoce la pantalla.</b> Vas a ver una caja de texto abajo que dice algo como «¿En qué te puedo ayudar?». Ahí escribes, igual que un chat.",
+    "<b>Manda tu primer mensaje.</b> Escribe: «Hola, soy contadora y nunca he usado una IA. ¿Me explicas qué puedes hacer por mí, con ejemplos?» y presiona enviar.",
+    "<b>Platica de ida y vuelta.</b> Lee su respuesta y contéstale como si hablaras con una persona: «no entendí esto», «dame un ejemplo», «hazlo más corto». Así se usa.",
+    "<b>Vuelve aquí.</b> Cuando te sientas lista, abre el Capítulo 1. Y si te atoras en cualquier momento, anota tu duda en las notas del capítulo y la ves con Pablo en la clase en vivo."],
+  prompts:[
+    "Hola, soy contadora y nunca he usado una IA. Explícame qué puedes hacer por mí, con 3 ejemplos de mi trabajo.",
+    "Trátame como principiante total. Si usas una palabra difícil, explícamela de inmediato."],
+  reto:"Antes de seguir, pásale a la IA 3 cosas que te gustaría que te ayudara a resolver (del trabajo o de tu casa). No para hacerlas todavía, solo para ver qué te responde y empezar a imaginar las posibilidades.",
+  recursos:[
+    {tipo:"curso", t:"Elementos de IA — curso gratis en español", src:"Universidad de Helsinki", url:"https://www.elementsofai.com/es"},
+    {tipo:"video", t:"Qué es la inteligencia artificial, explicado fácil", src:"YouTube", url:"https://www.youtube.com/results?search_query=que+es+la+inteligencia+artificial+explicado+facil+principiantes"},
+    {tipo:"doc", t:"Centro de ayuda de Claude", src:"support.claude.com", url:"https://support.claude.com"}]
+};
+
+const CAPITULOS = [
+  { n:1, t:"Primer contacto",
+    d:"Qué es la IA, qué sí puede y qué no, y por qué vale la pena para ti.",
+    lead:"En este capítulo le pierdes el miedo. La IA no piensa ni sabe como una persona: predice la mejor respuesta a lo que le escribes. Por eso a veces se equivoca con mucha seguridad, y por eso aprender a preguntarle bien lo cambia todo. Hoy solo vas a jugar y descubrir de qué es capaz.",
+    aprende:[
+      "Qué es una IA y en qué se equivoca, para que nunca le creas a ciegas",
+      "Por qué la misma pregunta da respuestas distintas según cómo la plantees",
+      "Dónde empezar sin miedo a 'romper' nada: no puedes romper nada"],
+    pasos:[
+      "Abre claude.ai (o la IA que uses) y salúdala.",
+      "Pídele que se presente: «¿Qué eres y qué puedes hacer por una contadora?».",
+      "Hazle una pregunta que siempre tuviste: lo que sea, de trabajo o personal.",
+      "Pídele lo mismo de dos formas: «explícamelo como a un niño» y luego «explícamelo como a un experto». Observa la diferencia.",
+      "Cierra preguntándole: «¿en qué cosas te equivocas y debería tener cuidado?»."],
+    prompts:[
+      "Explícame qué es la inteligencia artificial como si fuera mi primera vez, sin tecnicismos, en 5 frases.",
+      "Soy contadora. Dame 3 ejemplos concretos de cosas que podrías ayudarme a hacer esta misma semana."],
+    ej:"Pídele que te explique algo que siempre quisiste entender, como si tuvieras 10 años. Luego pídeselo otra vez pero para alguien experto. Nota cómo la misma pregunta da respuestas distintas según cómo la planteas.",
+    reto:"Escríbele: «Hazme 10 preguntas para conocerme y sugerirme en qué me puedes ayudar». Deja que te entreviste y guarda las 3 ideas que más te sorprendan.",
+    recursos:[
+      {tipo:"curso", t:"Elementos de IA — curso gratis en español", src:"Universidad de Helsinki", url:"https://www.elementsofai.com/es"},
+      {tipo:"video", t:"Qué es la IA explicado fácil para principiantes", src:"YouTube", url:"https://www.youtube.com/results?search_query=que+es+la+inteligencia+artificial+explicado+facil+principiantes"},
+      {tipo:"blog", t:"Cómo aprender Claude: guía de principiante a avanzado", src:"DataCamp", url:"https://www.datacamp.com/blog/how-to-learn-claude"}]
+  },
+
+  { n:2, t:"El arte de pedir",
+    d:"El capítulo más importante: cómo escribir prompts que dan en el blanco a la primera.",
+    lead:"Un 'prompt' es simplemente lo que le escribes a la IA. La diferencia entre una respuesta mediocre y una excelente casi nunca está en la IA: está en cómo pediste. Aquí aprendes la receta que usan quienes le sacan el máximo provecho. Es la habilidad que vas a usar en todos los demás capítulos.",
+    aprende:[
+      "La receta de 4 piezas: Papel + Tarea + Contexto + Formato",
+      "Por qué darle un rol ('actúa como...') mejora enormemente la respuesta",
+      "Cómo pedir el formato exacto: tabla, lista, correo, resumen de 3 líneas",
+      "Afinar sin empezar de cero: 'más corto', 'más formal', 'dame otras 3 opciones'"],
+    receta:[
+      ["Papel","Quién quieres que sea","«Actúa como un contador senior que le explica a un cliente...»"],
+      ["Tarea","Qué quieres exactamente","«...resume este estado de cuenta...»"],
+      ["Contexto","Lo que debe saber","«...el cliente no sabe de finanzas y está nervioso.»"],
+      ["Formato","Cómo lo quieres","«Dámelo en 5 puntos, en lenguaje sencillo.»"]],
+    pasos:[
+      "Piensa una tarea real tuya (un correo, un resumen, una duda de Excel).",
+      "Escríbela usando las 4 piezas en orden: papel, tarea, contexto, formato.",
+      "Lee la respuesta. ¿Casi? Pídele ajustes: «más breve», «más formal», «dame 3 versiones».",
+      "Ahora escríbela 'a la mala', sin receta, y compara. Vas a ver por qué esto importa tanto.",
+      "Guarda tu mejor prompt en las notas del capítulo para reusarlo."],
+    prompts:[
+      "Actúa como un asesor experto en productividad. Ayúdame a organizar mi semana: tengo cierre mensual, 3 clientes y la obra de mi casa. Dame un plan por días en una tabla.",
+      "Reescribe esto en tono profesional pero cálido, máximo 4 líneas: [pega tu texto].",
+      "No me gustó. Hazlo más breve, quita los tecnicismos y dame 3 versiones distintas para elegir."],
+    ej:"Toma una tarea tuya real y escríbela con las 4 piezas de la receta. Luego escríbela 'a la mala', de cualquier forma. Compara las dos respuestas: vas a ver con tus propios ojos por qué esto es la clave de todo.",
+    reto:"Inventa tu propio prompt 'plantilla' para algo que hagas cada semana (un correo de cobranza, un resumen para un cliente). Púlelo hasta que funcione siempre: ese es tu primer asistente a la medida. Guárdalo en tus notas.",
+    recursos:[
+      {tipo:"video", t:"Cómo hacer buenos prompts para IA (principiantes)", src:"YouTube", url:"https://www.youtube.com/results?search_query=como+hacer+buenos+prompts+para+ia+principiantes+espanol"},
+      {tipo:"doc", t:"Biblioteca de prompts y guías de Claude", src:"docs.claude.com", url:"https://docs.claude.com"},
+      {tipo:"blog", t:"Guía práctica para usar Claude desde cero", src:"DataCamp", url:"https://www.datacamp.com/blog/how-to-learn-claude"}]
+  },
+
+  { n:3, t:"Tu asistente del día a día",
+    d:"Redactar, resumir, ordenar ideas y quitarte de encima lo repetitivo.",
+    lead:"Aquí la IA deja de ser una curiosidad y se vuelve útil de verdad. Todo lo que te quita tiempo —escribir correos, resumir textos largos, ordenar pendientes— puedes delegarlo en segundos y quedarte con lo que sí requiere tu criterio.",
+    aprende:[
+      "Escribir y mejorar textos en segundos",
+      "Resumir algo largo en lo que de verdad importa",
+      "Convertir una lluvia de ideas en un plan con pasos",
+      "Delegarle lo repetitivo para quedarte con lo que sí requiere tu criterio"],
+    pasos:[
+      "Toma un correo o mensaje que tengas pendiente escribir.",
+      "Pídele un borrador dándole el contexto y el tono que quieres.",
+      "Pídele el resumen de un texto largo en 3 niveles: una frase, un párrafo y una lista.",
+      "Dale 5 ideas sueltas y pídele que las ordene en un plan con prioridades.",
+      "Quédate siempre con la última palabra: ajusta hasta que suene a ti."],
+    prompts:[
+      "Tengo estas ideas sueltas: [pégalas]. Organízalas en un plan claro con pasos y prioridades.",
+      "Resume este texto en 3 niveles: una frase, un párrafo y los puntos clave en lista."],
+    ej:"Planea algo tuyo (un pendiente de la casa, un trámite): pídele la lista de pasos y un presupuesto estimado, y ajústalo pidiendo cambios hasta que te sirva de verdad.",
+    reto:"Haz una lista de las 5 tareas que más tiempo te quitan cada semana. Pregúntale a la IA cuáles podría ayudarte a hacer y cómo. Esa lista es tu mapa personal de qué automatizar primero.",
+    recursos:[
+      {tipo:"video", t:"Usar IA para correos y organizar tu día", src:"YouTube", url:"https://www.youtube.com/results?search_query=usar+inteligencia+artificial+escribir+correos+organizar+tareas"},
+      {tipo:"blog", t:"Cómo usar Claude en tu día a día", src:"DataCamp", url:"https://www.datacamp.com/blog/how-to-learn-claude"}]
+  },
+
+  { n:4, t:"Tus documentos",
+    d:"Leer, resumir y sacar lo clave de PDFs, fotos, contratos y estados de cuenta.",
+    lead:"La IA puede 'leer' un documento por ti y responderte preguntas sobre él. En lugar de leer 20 páginas, le subes el archivo y le preguntas lo que te interesa. Para una contadora esto es oro: contratos, pólizas, estados de cuenta.",
+    aprende:[
+      "Subir un documento y hacerle preguntas en lugar de leerlo entero",
+      "Sacar fechas, montos, cláusulas y puntos importantes",
+      "Comparar dos versiones de un documento y ver qué cambió",
+      "Pedir un resumen que de verdad entiendas"],
+    pasos:[
+      "Ten a la mano un PDF o foto de un documento (sin datos sensibles de clientes, por ahora).",
+      "En Claude, usa el clip o 'adjuntar' para subir el archivo.",
+      "Pregúntale: «resume este documento en 5 puntos» o «¿qué fechas y montos importan?».",
+      "Pídele que te explique cualquier parte confusa en lenguaje sencillo.",
+      "Verifica un dato clave contra el original: nunca confíes a ciegas."],
+    prompts:[
+      "Te comparto este contrato. Dime en lenguaje sencillo: qué me obliga, qué fechas importan y qué debería revisar con cuidado.",
+      "De este estado de cuenta, sácame los 5 movimientos más grandes y cualquier cosa que se vea rara."],
+    ej:"Toma un documento largo que tengas a la mano y pídele los 5 puntos que más importan, en español claro.",
+    reto:"Piensa en qué documento revisas más seguido (pólizas, contratos, declaraciones). Pregúntale a la IA cómo podría ayudarte a revisarlos más rápido sin perder el detalle. Anota la idea que más te sirva.",
+    recursos:[
+      {tipo:"video", t:"Cómo resumir y analizar un PDF con IA", src:"YouTube", url:"https://www.youtube.com/results?search_query=como+resumir+analizar+pdf+con+inteligencia+artificial"},
+      {tipo:"doc", t:"Trabajar con archivos en Claude", src:"support.claude.com", url:"https://support.claude.com"}]
+  },
+
+  { n:5, t:"Números, Excel y contabilidad",
+    d:"Donde la IA se vuelve tu aliada de verdad como contadora.",
+    lead:"Este es tu terreno. La IA no reemplaza tu criterio contable, pero te quita la fricción: te da la fórmula de Excel exacta, te ordena una hoja hecha un desastre, te ayuda a detectar lo que no cuadra y a explicar un resultado a quien no sabe de números.",
+    aprende:[
+      "Pedir la fórmula correcta de Excel explicada con tus palabras",
+      "Limpiar y ordenar una hoja desordenada en segundos",
+      "Entender y revisar una tabla: qué está raro, qué no cuadra",
+      "Explicar un resultado financiero a alguien que no es de números"],
+    pasos:[
+      "Describe en palabras lo que necesitas en Excel (ej. «sumar solo las filas de un cliente»).",
+      "Pídele la fórmula, en qué celda va y qué hace cada parte.",
+      "Pega una tabla (puedes copiar celdas) y pídele que la ordene o detecte errores.",
+      "Pídele que te explique un resultado como si se lo contaras a un cliente.",
+      "Comprueba siempre los cálculos importantes: la IA ayuda, tú firmas."],
+    prompts:[
+      "Necesito una fórmula en Excel que [describe lo que quieres]. Dámela, dime en qué celda va y explícame qué hace.",
+      "Te paso esta tabla. Encuentra errores, duplicados o cifras que no cuadren, y dime qué revisarías tú como contador."],
+    ej:"Dale una tabla con datos revueltos y pídele que la deje ordenada y te diga qué encontró raro. Comprueba si tiene razón.",
+    reto:"Escríbele: «Soy contadora. Dame 10 formas concretas en que la IA puede ayudarme en mi trabajo diario que probablemente no conozco». Prepárate para sorprenderte: marca las 3 que quieres probar este mes.",
+    recursos:[
+      {tipo:"video", t:"ChatGPT para Excel: fórmulas paso a paso", src:"YouTube", url:"https://www.youtube.com/results?search_query=chatgpt+para+excel+formulas+tutorial+espanol"},
+      {tipo:"blog", t:"Uso práctico de la IA en contabilidad y finanzas", src:"ContadorMx", url:"https://contadormx.com/uso-practico-chatgpt-contabilidad-finanzas/"}]
+  },
+
+  { n:6, t:"Tu profesión en el mundo IA",
+    d:"Abrir los ojos: lo que una contadora puede hacer hoy con IA, más allá de lo obvio.",
+    lead:"La IA no va a reemplazar a los contadores. Va a multiplicar a los contadores que la sepan usar. Este capítulo es para que levantes la vista: nuevos servicios para tus clientes, análisis que antes tomaban medio día, y una forma de destacar entre colegas que todavía no se animan.",
+    aprende:[
+      "La IA no reemplaza al contador: multiplica al que la sabe usar",
+      "Ideas reales: análisis de clientes, proyecciones, explicar cifras, atención más rápida",
+      "Cómo ofrecer más a tus clientes sin trabajar más horas",
+      "Por dónde empezar a destacar entre colegas que aún no la usan"],
+    pasos:[
+      "Elige UN cliente o tipo de trabajo que conozcas bien.",
+      "Pídele a la IA ideas de cómo darle más valor a ese cliente usando IA.",
+      "Prueba una: prepara un análisis o resumen que normalmente te toma horas.",
+      "Mide cuánto tiempo te ahorró y qué tan bien quedó.",
+      "Imagina cómo cobrarías eso como un servicio nuevo."],
+    prompts:[
+      "Actúa como consultor de negocios. Soy contadora independiente. Proponme 5 servicios nuevos que podría ofrecer a mis clientes apoyándome en IA, con una frase de cómo cobrarlos.",
+      "Explícame, con un ejemplo, cómo podría usar la IA para darle a un cliente un análisis que normalmente me tomaría medio día."],
+    ej:"Elige UN cliente o tipo de trabajo tuyo. Pídele a la IA que te ayude a preparar algo que normalmente te toma horas (un resumen, un análisis, una explicación). Mide cuánto tiempo te ahorró.",
+    reto:"Imagina tu trabajo dentro de 2 años usando IA todos los días. Escríbele tu visión y pídele un plan de 3 pasos para llegar ahí. Esta es tu hoja de ruta: no la de nadie más.",
+    recursos:[
+      {tipo:"blog", t:"ChatGPT en la contabilidad: transformando la práctica contable", src:"AMCP (Colegio de Contadores, México)", url:"https://amcpdf.org.mx/chatgpt-en-la-contabilidad-transformando-la-practica-contable-con-inteligencia-artificial/"},
+      {tipo:"blog", t:"Herramientas de IA para contadores", src:"Actualícese", url:"https://actualicese.com/herramientas-de-ia-para-contadores-automatiza-tareas-analiza-datos-y-lidera-con-tecnologia/"},
+      {tipo:"video", t:"Inteligencia artificial para contadores: usos prácticos", src:"YouTube", url:"https://www.youtube.com/results?search_query=inteligencia+artificial+para+contadores+usos+practicos"}]
+  },
+
+  { n:7, t:"Crear e idear",
+    d:"La parte divertida: imágenes, ideas y usar la IA para lo tuyo.",
+    lead:"No todo es trabajo. La IA también crea imágenes a partir de una descripción y es una gran compañera de lluvia de ideas cuando te quedas en blanco. Este capítulo es para que te sueltes y la disfrutes en lo personal.",
+    aprende:[
+      "Generar imágenes a partir de una descripción",
+      "Pedir ideas cuando te quedas en blanco",
+      "Usar la IA como compañera de lluvia de ideas, no solo como asistente",
+      "Darle gusto a lo personal: tu casa, tus proyectos, lo que te haga ilusión"],
+    pasos:[
+      "Piensa algo que quieras crear o imaginar (una imagen, una idea, un nombre).",
+      "Descríbelo con detalle: qué hay, qué estilo, qué colores, qué ambiente.",
+      "Pídele varias opciones y elige la que más te lata.",
+      "Afínala: «más colorido», «más sobrio», «otra versión».",
+      "Disfrútalo: aquí no hay que ser útil, solo explorar."],
+    prompts:[
+      "Dame 20 ideas para [lo que sea: decorar un espacio, un regalo, un nombre]. Que 5 sean seguras, 10 interesantes y 5 un poco locas.",
+      "Quiero una imagen de [descríbela con detalle: qué hay, qué estilo, qué colores, qué ambiente]."],
+    ej:"Crea algo que sea solo para ti: una imagen para decorar un espacio, una tarjeta, o ideas para un proyecto personal. Disfrútalo, sin que tenga que ser útil.",
+    reto:"Piensa en algo que te gustaría crear o resolver y que creías imposible para ti. Descríbeselo a la IA y pídele que te acompañe a lograrlo paso a paso. El reto es atreverte a pedir algo grande.",
+    recursos:[
+      {tipo:"video", t:"Cómo crear imágenes con IA (para principiantes)", src:"YouTube", url:"https://www.youtube.com/results?search_query=como+crear+imagenes+con+inteligencia+artificial+principiantes"}]
+  },
+
+  { n:8, t:"Criterio y confianza",
+    d:"Cuándo no creerle, cómo revisar, y cómo cuidar tu información.",
+    lead:"Cierras el curso con lo que te vuelve experta: criterio. La IA a veces inventa datos con total seguridad (se le llama 'alucinar'). Saber cuándo verificar, qué no compartir y cómo quedarte tú con la última palabra es lo que separa a quien la usa bien de quien se mete en problemas.",
+    aprende:[
+      "Reconocer cuándo la IA puede estar inventando (pasa, y hay que saber verlo)",
+      "Verificar siempre antes de usar algo importante, sobre todo cifras y leyes",
+      "Qué datos NO conviene compartir y por qué (clientes, datos sensibles)",
+      "Tú mandas: la IA propone, tú decides y firmas"],
+    pasos:[
+      "Pídele un dato concreto (una fecha, una cifra, un artículo de ley).",
+      "Verifícalo por tu cuenta en una fuente oficial. ¿Coincide?",
+      "Pregúntale qué tan seguro está de lo que te dijo y qué deberías comprobar.",
+      "Haz tu lista de datos que NUNCA pondrás en una IA (datos de clientes, RFC, contraseñas).",
+      "Escribe tus 3 reglas de oro para usar la IA con seguridad en tu trabajo."],
+    prompts:[
+      "Dame esta información y, al lado de cada dato, dime qué tan seguro estás y qué debería verificar yo por mi cuenta.",
+      "Antes de darte datos de un cliente, ¿qué información es sensible y mejor no compartir? Explícame cómo trabajar sin exponerla."],
+    ej:"Pídele un dato concreto (una fecha, una cifra, un artículo de ley) y luego compruébalo por tu cuenta. Caza un error: casi siempre hay uno esperando, y aprender a verlo es lo que te hace experta.",
+    reto:"Escribe tus propias 3 reglas de oro para usar la IA de forma segura en tu trabajo. Son tuyas, basadas en lo que aprendiste. Guárdalas: son el cierre de tu curso y el inicio de tu criterio propio.",
+    recursos:[
+      {tipo:"video", t:"Riesgos de la IA: alucinaciones y privacidad", src:"YouTube", url:"https://www.youtube.com/results?search_query=riesgos+errores+inteligencia+artificial+alucinaciones+privacidad"},
+      {tipo:"blog", t:"ChatGPT como herramienta contable: aplicaciones y límites", src:"ContadorMx", url:"https://contadormx.com/uso-practico-chatgpt-contabilidad-finanzas/"}]
+  },
+];
+
+/* ===================== ESTADO ===================== */
+const STORE_KEY = "brujula_ia_v2";
+let state = { done:[], notes:{} };
+try{ const s=localStorage.getItem(STORE_KEY); if(s) state=Object.assign(state,JSON.parse(s)); }catch(e){}
+function save(){ try{ localStorage.setItem(STORE_KEY,JSON.stringify(state)); }catch(e){} }
+
+const ICON = {
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  arrow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>',
+  spark:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+  idea:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg>',
+  pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>',
+  blog:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>',
+  curso:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2.5 2.5 6 2.5s6-1.5 6-2.5v-5"/></svg>',
+  doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>',
+  ext:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>',
+};
+
+function statusOf(n){
+  if(state.done.includes(n)) return "done";
+  const maxDone = state.done.length ? Math.max(...state.done) : 0;
+  if(n === maxDone+1) return "current";
+  return "locked";
+}
+
+function render(){
+  const ruta = document.getElementById("ruta");
+  ruta.innerHTML = "";
+  CAPITULOS.forEach(c=>{
+    const st = statusOf(c.n);
+    const el = document.createElement(st==="locked"?"div":"button");
+    el.className = "node "+st;
+    let markerInner = st==="done"?ICON.check : st==="locked"?ICON.lock : c.n;
+    let chip = st==="current"?'<span class="chip current">Aquí vas</span>'
+             : st==="done"?'<span class="chip done">Completado</span>'
+             : '<span class="chip lock">Bloqueado</span>';
+    el.innerHTML = `
+      <div class="marker">${markerInner}</div>
+      <div class="node-body">
+        <div class="node-top"><h3>${c.t}</h3>${chip}</div>
+        <p class="desc">${c.d}</p>
+      </div>
+      <div class="go">${ICON.arrow}</div>`;
+    if(st!=="locked") el.addEventListener("click",()=>openChapter(c.n));
+    ruta.appendChild(el);
+  });
+  updateProgress();
+}
+
+function updateProgress(){
+  const total = CAPITULOS.length;
+  const done = state.done.length;
+  const pct = Math.round(done/total*100);
+  const circ = 2*Math.PI*52;
+  document.getElementById("ringFill").setAttribute("stroke-dashoffset", circ*(1-done/total));
+  document.getElementById("ringNum").innerHTML = done+'<span style="font-size:.9rem;color:var(--muted)">/'+total+'</span>';
+  document.getElementById("miniPct").textContent = pct+"%";
+  document.getElementById("miniFill").style.width = pct+"%";
+  document.getElementById("progLabel").textContent = done+" de "+total+" completados";
+}
+
+/* ===================== SHEET DE CAPÍTULO ===================== */
+function recursoRow(r){
+  return `<a class="recurso" href="${r.url}" target="_blank" rel="noopener">
+    <div class="recurso-ico ${r.tipo}">${ICON[r.tipo]||ICON.doc}</div>
+    <div class="recurso-tx"><div class="rt">${r.t}</div>
+      <div class="rs"><span class="tag">${r.tipo}</span>${r.src}</div></div>
+    <div class="ext">${ICON.ext}</div></a>`;
+}
+
+function buildSheet(c, opts){
+  opts = opts||{};
+  const learn = (c.aprende||[]).map(a=>`<li>${ICON.spark}<span>${a}</span></li>`).join("");
+  const note = (state.notes[opts.noteKey]||"").replace(/</g,"&lt;");
+
+  const recetaBlock = c.receta ? `
+    <div class="block"><div class="label">La receta de un buen prompt</div>
+      <div class="receta">${c.receta.map(r=>`
+        <div class="receta-row"><div class="rk">${r[0]}</div>
+          <div class="rv"><div class="what">${r[1]}</div><div class="ex">${r[2]}</div></div></div>`).join("")}
+      </div></div>` : "";
+
+  const pasosBlock = c.pasos ? `
+    <div class="block"><div class="label">Paso a paso</div>
+      <div class="pasos">${c.pasos.map((p,i)=>`
+        <div class="paso"><div class="paso-n">${i+1}</div><div class="paso-tx">${p}</div></div>`).join("")}
+      </div></div>` : "";
+
+  const promptsBlock = c.prompts ? `
+    <div class="block"><div class="label">Prompts listos para copiar</div>
+      <div class="prompt-hint">${ICON.pen}<span>Cópialos, pégalos en tu IA y cámbialos por lo tuyo.</span></div>
+      ${c.prompts.map(p=>`<div class="prompt"><span class="ptext">${p}</span>
+        <button class="copy" aria-label="Copiar" data-copy="${p.replace(/"/g,'&quot;')}">${ICON.copy}</button></div>`).join("")}
+    </div>` : "";
+
+  const ejBlock = c.ej ? `
+    <div class="block"><div class="exercise"><div class="label">Tu ejercicio</div><p>${c.ej}</p></div></div>` : "";
+
+  const retoBlock = c.reto ? `
+    <div class="block"><div class="reto">${ICON.idea}
+      <div><div class="label">Reto de ideas propias</div><p>${c.reto}</p></div></div></div>` : "";
+
+  const recBlock = c.recursos ? `
+    <div class="block"><div class="label">Para profundizar — videos, cursos y blogs</div>
+      <div class="recursos">${c.recursos.map(recursoRow).join("")}</div></div>` : "";
+
+  const numLine = opts.num ? `<div class="num">${opts.num}</div>` : "";
+  const actions = opts.noComplete ? `
+    <div class="sheet-actions"><button class="btn-done" id="doneBtn">Entendido, ¡a practicar!</button></div>`
+    : `<div class="sheet-actions">
+        <button class="btn-done ${opts.isDone?'is-done':''}" id="doneBtn">
+          ${opts.isDone?ICON.check+' Completado':'Marcar como completado'}</button>
+        <button class="btn-ghost" id="laterBtn">Cerrar</button></div>`;
+
+  document.getElementById("sheetIn").innerHTML = `
+    <button class="sheet-close" id="closeBtn" aria-label="Cerrar">${ICON.x}</button>
+    ${numLine}
+    <h2 id="ovTitle">${c.t}</h2>
+    <p class="lead">${c.lead||c.d}</p>
+    ${learn?`<div class="block"><div class="label">Qué vas a poder hacer</div><ul class="learn">${learn}</ul></div>`:""}
+    ${recetaBlock}
+    ${pasosBlock}
+    ${promptsBlock}
+    ${ejBlock}
+    ${retoBlock}
+    ${recBlock}
+    <div class="block"><div class="label">Tus notas</div>
+      <textarea class="notes" id="noteBox" placeholder="Apunta lo que descubras, tus ideas, dudas para la clase en vivo...">${note}</textarea>
+      <div class="saved" id="savedMsg">Guardado</div></div>
+    ${actions}`;
+
+  document.getElementById("overlay").classList.add("open");
+  document.body.style.overflow="hidden";
+
+  document.getElementById("closeBtn").onclick = closeSheet;
+  const later = document.getElementById("laterBtn"); if(later) later.onclick = closeSheet;
+
+  document.querySelectorAll(".prompt .copy").forEach(btn=>{
+    btn.addEventListener("click",async()=>{
+      const txt = btn.getAttribute("data-copy");
+      try{ await navigator.clipboard.writeText(txt); }
+      catch(e){ const r=document.createRange(); r.selectNodeContents(btn.previousElementSibling);
+        const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r); }
+      btn.classList.add("ok"); btn.innerHTML=ICON.check;
+      setTimeout(()=>{btn.classList.remove("ok"); btn.innerHTML=ICON.copy;},1400);
+    });
+  });
+
+  const box = document.getElementById("noteBox");
+  let tmr;
+  box.addEventListener("input",()=>{
+    state.notes[opts.noteKey]=box.value; save();
+    clearTimeout(tmr);
+    const m=document.getElementById("savedMsg"); m.classList.add("show");
+    tmr=setTimeout(()=>m.classList.remove("show"),1200);
+  });
+
+  return document.getElementById("doneBtn");
+}
+
+function openChapter(n){
+  const c = CAPITULOS.find(x=>x.n===n);
+  const isDone = state.done.includes(n);
+  const doneBtn = buildSheet(c, {num:"Capítulo "+c.n, noteKey:"cap"+n, isDone});
+  doneBtn.onclick = ()=>toggleDone(n);
+  document.querySelector(".sheet").scrollTop = 0;
+}
+
+function openStart(){
+  const doneBtn = buildSheet(EMPIEZA, {num:"Empieza aquí", noteKey:"empieza", noComplete:true});
+  doneBtn.onclick = closeSheet;
+  document.querySelector(".sheet").scrollTop = 0;
+}
+
+function toggleDone(n){
+  if(state.done.includes(n)) state.done = state.done.filter(x=>x!==n);
+  else state.done.push(n);
+  save(); render(); closeSheet();
+}
+
+function closeSheet(){
+  document.getElementById("overlay").classList.remove("open");
+  document.body.style.overflow="";
+}
+
+document.getElementById("overlay").addEventListener("click",e=>{ if(e.target.id==="overlay") closeSheet(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeSheet(); }});
+document.getElementById("startBtn").onclick = openStart;
+document.getElementById("continueBtn").onclick = ()=>{
+  const maxDone = state.done.length?Math.max(...state.done):0;
+  openChapter(Math.min(maxDone+1, CAPITULOS.length));
+};
+
+/* ===================== TEMA ===================== */
+const sun='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const moon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+function currentDark(){const t=document.documentElement.getAttribute("data-theme"); if(t) return t==="dark"; return window.matchMedia("(prefers-color-scheme:dark)").matches;}
+function syncThemeIcon(){ document.getElementById("themeBtn").innerHTML = currentDark()?sun:moon; }
+document.getElementById("themeBtn").onclick=()=>{
+  const next = currentDark()?"light":"dark";
+  document.documentElement.setAttribute("data-theme",next);
+  try{localStorage.setItem("brujula_theme",next);}catch(e){}
+  syncThemeIcon();
+};
+try{const st=localStorage.getItem("brujula_theme"); if(st) document.documentElement.setAttribute("data-theme",st);}catch(e){}
+syncThemeIcon();
+
+render();
+</script>
+
+</body>
+</html>
